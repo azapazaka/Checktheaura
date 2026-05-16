@@ -1,0 +1,328 @@
+import { startTransition, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { buildFallbackCoachAnalysis } from '../coach/fallback'
+import type { CoachAnalyzeResponse } from '../coach/types'
+import {
+  CLASS_META,
+  DAILY_QUEST_LABELS,
+  XP_BREAKDOWN_LABELS,
+  getCurrentHeroArt,
+  getDifficultyLabel,
+  getThemeLabel,
+} from '../rpg/meta'
+import { getLevelProgress } from '../rpg/progression'
+import { useProgressStore } from '../store/progress-store'
+
+type AnalysisState = {
+  matchId: string
+  payload: CoachAnalyzeResponse
+  source: 'live' | 'fallback'
+}
+
+export function ResultsPage() {
+  const lastResult = useProgressStore((state) => state.lastResult)
+  const profile = useProgressStore((state) => state.profile)
+  const [analysisState, setAnalysisState] = useState<AnalysisState | null>(null)
+
+  useEffect(() => {
+    if (!lastResult) {
+      return
+    }
+
+    let cancelled = false
+
+    const fallbackPayload = buildFallbackCoachAnalysis({
+      moves: lastResult.moves,
+      result: lastResult.result,
+      playerColor: 'white',
+      difficulty: lastResult.difficulty,
+      xpSummary: lastResult.xpSummary,
+    })
+
+    const loadAnalysis = async () => {
+      try {
+        const response = await fetch('/api/coach/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            moves: lastResult.moves,
+            result: lastResult.result,
+            playerColor: 'white',
+            difficulty: lastResult.difficulty,
+            xpSummary: lastResult.xpSummary,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Coach endpoint failed')
+        }
+
+        const payload = (await response.json()) as CoachAnalyzeResponse
+        const source =
+          JSON.stringify(payload) === JSON.stringify(fallbackPayload)
+            ? 'fallback'
+            : 'live'
+
+        if (!cancelled) {
+          startTransition(() =>
+            setAnalysisState({ matchId: lastResult.id, payload, source }),
+          )
+        }
+      } catch {
+        if (!cancelled) {
+          startTransition(() =>
+            setAnalysisState({
+              matchId: lastResult.id,
+              payload: fallbackPayload,
+              source: 'fallback',
+            }),
+          )
+        }
+      }
+    }
+
+    void loadAnalysis()
+
+    return () => {
+      cancelled = true
+    }
+  }, [lastResult])
+
+  if (!lastResult || !profile) {
+    return (
+      <section className="arcade-panel rounded-[2.5rem] p-8">
+        <h2 className="font-display text-4xl text-white">Пока нет завершенной партии</h2>
+        <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
+          Когда закончишь матч, здесь появятся XP-сводка, свежие открытия и
+          честный разбор от AI Coach.
+        </p>
+      </section>
+    )
+  }
+
+  const analysis =
+    analysisState?.matchId === lastResult.id ? analysisState.payload : null
+  const analysisSource =
+    analysisState?.matchId === lastResult.id ? analysisState.source : null
+  const isLoading = !analysis
+  const levelProgress = getLevelProgress(profile.xp)
+  const classMeta = CLASS_META[profile.classId]
+  const hero = getCurrentHeroArt(profile.classId, profile.level)
+  const unlockEntries = [
+    ...lastResult.newUnlocks.difficulties.map(getDifficultyLabel),
+    ...lastResult.newUnlocks.themes.map(getThemeLabel),
+  ]
+  const questRewardEntries = Object.entries(lastResult.dailyQuestRewards).filter(
+    ([, value]) => value > 0,
+  )
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[0.98fr_1.02fr]">
+      <section className="arcade-panel overflow-hidden rounded-[2.5rem] p-6 sm:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="arcade-kicker">Match complete</p>
+            <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
+              {lastResult.outcome === 'win'
+                ? 'Победа'
+                : lastResult.outcome === 'draw'
+                  ? 'Ничья'
+                  : 'Поражение'}
+            </h2>
+            <p className="mt-3 max-w-xl text-base leading-7 text-white/72">
+              Матч завершен, герой получил опыт, а progression честно отражает
+              и XP, и дневные награды, и свежие открытия после партии.
+            </p>
+          </div>
+          <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-[2rem] border border-white/14 bg-white/8">
+            <img src={hero.avatar} alt="Result hero avatar" className="h-full w-full object-contain" />
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-[1.8rem] border border-white/12 bg-white/8 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-white/58">Получено XP</p>
+            <p className="mt-2 text-4xl font-bold text-white">+{lastResult.xpEarned}</p>
+          </div>
+          <div className="rounded-[1.8rem] border border-white/12 bg-white/8 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-white/58">Новый уровень</p>
+            <p className="mt-2 text-4xl font-bold text-white">{profile.level}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-[1.9rem] border border-white/12 bg-black/18 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">
+                Прогресс до следующего уровня
+              </p>
+              <p className="mt-2 text-sm text-white/66">
+                {levelProgress.currentXp} / {levelProgress.nextLevelXp} XP • следующий
+                уровень {levelProgress.nextLevel}
+              </p>
+            </div>
+            <p className="text-2xl font-bold text-white">{levelProgress.progressPercent}%</p>
+          </div>
+          <div className="mt-4 h-4 overflow-hidden rounded-full bg-black/24">
+            <div
+              className="h-full rounded-full bg-[linear-gradient(90deg,#ffe45e,#ff8c42)]"
+              style={{ width: `${levelProgress.progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {Object.entries(lastResult.xpSummary.breakdown).map(([label, value]) =>
+            value > 0 ? (
+              <div
+                key={label}
+                className="flex items-center justify-between rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4 text-sm"
+              >
+                <span className="text-white/78">
+                  {XP_BREAKDOWN_LABELS[label as keyof typeof lastResult.xpSummary.breakdown]}
+                </span>
+                <span className="font-bold text-white">+{value}</span>
+              </div>
+            ) : null,
+          )}
+        </div>
+
+        {questRewardEntries.length > 0 ? (
+          <div className="mt-5 rounded-[1.8rem] border border-emerald-300/18 bg-emerald-400/10 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-emerald-100/72">
+              Квесты дня закрыты этим матчем
+            </p>
+            <div className="mt-4 space-y-2 text-sm">
+              {questRewardEntries.map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between text-emerald-50">
+                  <span>{DAILY_QUEST_LABELS[key as keyof typeof lastResult.dailyQuestRewards]}</span>
+                  <span className="font-bold">+{value} XP</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {unlockEntries.length > 0 ? (
+          <div className="mt-5 rounded-[1.8rem] border border-white/12 bg-white/8 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-white/58">
+              Новые разблокировки
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {unlockEntries.map((unlock) => (
+                <span
+                  key={unlock}
+                  className="rounded-full bg-[linear-gradient(90deg,#56ccf2,#2f80ed)] px-3 py-2 text-sm font-bold text-white"
+                >
+                  {unlock}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-5 rounded-[1.8rem] border border-white/12 bg-black/18 p-4 text-sm leading-6 text-white/74">
+          <p className="font-semibold text-white">{classMeta.activeBonus}</p>
+          <p className="mt-2">
+            {lastResult.usedShadowHint
+              ? 'Матч сыгран с подсказкой Shadow.'
+              : 'Матч сыгран без подсказки Shadow.'}
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            to="/versus"
+            className="rounded-[1.4rem] bg-[linear-gradient(90deg,#ffd54f,#ff9f1c)] px-5 py-3 text-sm font-bold text-slate-950"
+          >
+            Battle again
+          </Link>
+          <Link
+            to="/profile"
+            className="rounded-[1.4rem] border border-white/14 bg-white/8 px-5 py-3 text-sm font-semibold text-white/84"
+          >
+            Open profile
+          </Link>
+        </div>
+      </section>
+
+      <section className="arcade-panel rounded-[2.5rem] p-6 sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="arcade-kicker">AI Coach</p>
+            <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
+              Разбор партии
+            </h2>
+          </div>
+          {analysisSource ? (
+            <span
+              className={[
+                'rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em]',
+                analysisSource === 'live'
+                  ? 'bg-emerald-400/16 text-emerald-100'
+                  : 'border border-white/12 text-white/68',
+              ].join(' ')}
+            >
+              {analysisSource === 'live' ? 'Live Coach' : 'Fallback Coach'}
+            </span>
+          ) : null}
+        </div>
+
+        {isLoading ? (
+          <p className="mt-5 text-sm leading-7 text-white/68">
+            Анализируем ключевые моменты партии и поднимаем честную обратную
+            связь по твоей структуре игры...
+          </p>
+        ) : null}
+
+        {analysis ? (
+          <div className="mt-6 space-y-5">
+            <div className="rounded-[1.8rem] border border-white/12 bg-white/8 p-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">
+                Оценка партии
+              </p>
+              <p className="mt-2 text-5xl font-bold text-white">{analysis.score}/10</p>
+            </div>
+
+            <div>
+              <h3 className="font-display text-3xl text-white">Сильные моменты</h3>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-white/72">
+                {analysis.highlights.map((item) => (
+                  <li
+                    key={item}
+                    className="rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-display text-3xl text-white">Что улучшить</h3>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-white/72">
+                {analysis.mistakes.map((item) => (
+                  <li
+                    key={item}
+                    className="rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-[1.8rem] bg-[linear-gradient(135deg,#2f80ed,#56ccf2)] px-5 py-5 text-slate-950">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-68">
+                Практический совет
+              </p>
+              <p className="mt-2 text-sm leading-7">{analysis.tip}</p>
+            </div>
+          </div>
+        ) : null}
+      </section>
+    </div>
+  )
+}

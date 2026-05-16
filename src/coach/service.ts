@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { buildFallbackCoachAnalysis } from './fallback'
 import type { CoachAnalyzeRequest, CoachAnalyzeResponse } from './types'
 
+type CoachProvider = 'groq' | 'anthropic'
+
 const moveSchema = z.object({
   from: z.object({ row: z.number(), col: z.number() }),
   to: z.object({ row: z.number(), col: z.number() }),
@@ -68,6 +70,29 @@ function extractTextResponse(data: unknown) {
     .trim()
 }
 
+function extractGroqTextResponse(data: unknown) {
+  const candidate = z
+    .object({
+      choices: z.array(
+        z.object({
+          message: z.object({
+            content: z.union([z.string(), z.null()]).optional(),
+          }),
+        }),
+      ),
+    })
+    .safeParse(data)
+
+  if (!candidate.success) {
+    return null
+  }
+
+  return candidate.data.choices
+    .map((item) => item.message.content ?? '')
+    .join('\n')
+    .trim()
+}
+
 function parseCoachResponse(rawText: string) {
   const cleaned = rawText.replace(/```json|```/g, '').trim()
   return z
@@ -86,18 +111,67 @@ export async function analyzeCoachPayload(
     fetchImpl?: typeof fetch
     apiKey?: string
     model?: string
+    provider?: CoachProvider
   },
 ): Promise<CoachAnalyzeResponse> {
   const payload = coachAnalyzeRequestSchema.parse(input)
-  const apiKey = options?.apiKey ?? process.env.ANTHROPIC_API_KEY
+  const provider =
+    options?.provider ??
+    ((process.env.COACH_AI_PROVIDER?.toLowerCase() as CoachProvider | undefined) ??
+      (process.env.GROQ_API_KEY ? 'groq' : 'anthropic'))
+
+  const apiKey =
+    options?.apiKey ??
+    (provider === 'groq' ? process.env.GROQ_API_KEY : process.env.ANTHROPIC_API_KEY)
 
   if (!apiKey || payload.moves.length === 0) {
     return buildFallbackCoachAnalysis(payload)
   }
 
   const fetchImpl = options?.fetchImpl ?? fetch
+  const model =
+    options?.model ??
+    (provider === 'groq'
+      ? process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile'
+      : process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514')
 
   try {
+    if (provider === 'groq') {
+      const response = await fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.4,
+          max_tokens: 500,
+          messages: [
+            {
+              role: 'user',
+              content: buildPrompt(payload),
+            },
+          ],
+          response_format: {
+            type: 'json_object',
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Groq request failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const text = extractGroqTextResponse(data)
+      if (!text) {
+        throw new Error('Groq response missing text')
+      }
+
+      return parseCoachResponse(text)
+    }
+
     const response = await fetchImpl('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -106,7 +180,7 @@ export async function analyzeCoachPayload(
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: options?.model ?? 'claude-sonnet-4-20250514',
+        model,
         max_tokens: 500,
         temperature: 0.4,
         messages: [

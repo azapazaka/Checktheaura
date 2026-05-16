@@ -49,15 +49,46 @@ describe('coach service', () => {
     ).toThrow()
   })
 
-  test('falls back gracefully when the Anthropic request fails', async () => {
+  test('falls back gracefully when the provider request fails', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error('network'))
     const response = await analyzeCoachPayload(validPayload, {
       fetchImpl,
       apiKey: 'test-key',
+      provider: 'groq',
     })
 
     expect(response.highlights.length).toBeGreaterThan(0)
-    expect(response.tip).toMatch(/взятие|клетк|диагонал|темп/i)
+    expect(response.tip).toMatch(/взятие|клетку|диагональ|темп/i)
+  })
+
+  test('parses a Groq chat completion response', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                highlights: ['Strong opening control', 'You held tempo after the exchange'],
+                mistakes: ['Watch the long diagonal after each capture'],
+                tip: 'Before every exchange, check the landing square and the reply path.',
+                score: 8,
+              }),
+            },
+          },
+        ],
+      }),
+    })
+
+    const response = await analyzeCoachPayload(validPayload, {
+      fetchImpl,
+      apiKey: 'test-key',
+      provider: 'groq',
+      model: 'llama-3.3-70b-versatile',
+    })
+
+    expect(response.score).toBe(8)
+    expect(response.highlights[0]).toMatch(/Strong opening control/)
   })
 
   test('returns fallback analysis when match log is empty', async () => {

@@ -108,6 +108,12 @@ export type LeaderboardEntry = {
   isCurrentUser?: boolean
 }
 
+export type LeaderboardSnapshot = {
+  entries: LeaderboardEntry[]
+  currentUserEntry: LeaderboardEntry | null
+  totalPlayers: number
+}
+
 export type CloudProfileBootstrapPayload = {
   classId: RpgClass
   city: string

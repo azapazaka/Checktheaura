@@ -7,27 +7,23 @@ import shoppingCartIcon from '../assets/lobby-icons/shopping-cart.png'
 import trophyStarIcon from '../assets/lobby-icons/trophy-star.png'
 import { fetchLeaderboard } from '../cloud/leaderboard-service'
 import { createRoom } from '../cloud/room-service'
-import type { LeaderboardEntry } from '../cloud/types'
+import type { LeaderboardEntry, LeaderboardSnapshot } from '../cloud/types'
 import { LobbyStage } from '../components/lobby/LobbyStage'
 import { DAILY_QUEST_LABELS, getCurrentHeroArt } from '../rpg/meta'
 import { getCurrentDailyQuests, getLevelProgress } from '../rpg/progression'
 import { useProgressStore } from '../store/progress-store'
 
 type LobbyOverlay = null | 'leaderboard' | 'skins' | 'shop'
-type RegionTab = 'all' | 'Алматы' | 'Астана' | 'Шымкент' | 'Актау'
+type RegionTab = 'all' | string
 
-const REGION_TABS: Array<{ id: RegionTab; label: string }> = [
-  { id: 'all', label: 'All KZ' },
-  { id: 'Алматы', label: 'Алматы' },
-  { id: 'Астана', label: 'Астана' },
-  { id: 'Шымкент', label: 'Шымкент' },
-  { id: 'Актау', label: 'Актау' },
-]
+const FEATURED_CITIES = ['Алматы', 'Астана', 'Шымкент', 'Актау']
+const LEADERBOARD_EMPTY_STATE =
+  'Сыграй первый облачный матч, чтобы появиться в рейтинге.'
 
 const SKIN_CARDS = [
-  { name: 'Nomad', status: 'Equip', locked: false },
-  { name: 'Khan', status: 'Active', locked: false },
-  { name: 'Shadow', status: 'Level 15', locked: true },
+  { name: 'Nomad', status: 'Надеть', locked: false },
+  { name: 'Khan', status: 'Активен', locked: false },
+  { name: 'Shadow', status: 'Уровень 15', locked: true },
   { name: 'Phantom', status: 'PRO', locked: true },
 ]
 
@@ -75,7 +71,7 @@ function shareInviteSafely(inviteUrl: string) {
 function getQuestWidget(profile: ReturnType<typeof useProgressStore.getState>['profile']) {
   if (!profile) {
     return {
-      title: 'Beat Medium AI',
+      title: 'Победи Medium AI',
       progressPercent: 33,
     }
   }
@@ -86,7 +82,7 @@ function getQuestWidget(profile: ReturnType<typeof useProgressStore.getState>['p
 
   if (!activeEntry) {
     return {
-      title: 'Daily quests complete',
+      title: 'Все квесты дня закрыты',
       progressPercent: 100,
     }
   }
@@ -95,6 +91,18 @@ function getQuestWidget(profile: ReturnType<typeof useProgressStore.getState>['p
     title: DAILY_QUEST_LABELS[activeEntry[0] as keyof typeof DAILY_QUEST_LABELS],
     progressPercent: Math.max(20, Math.round((completedCount / 3) * 100)),
   }
+}
+
+function createRegionTabs(currentCity?: string | null) {
+  const values = ['all', ...FEATURED_CITIES]
+  if (currentCity && !values.includes(currentCity)) {
+    values.push(currentCity)
+  }
+
+  return values.map((id) => ({
+    id,
+    label: id === 'all' ? 'All KZ' : id,
+  }))
 }
 
 function StageActionButton({
@@ -129,33 +137,170 @@ function RoomActionButton({
   )
 }
 
+function LeaderboardModalContent({
+  regionTab,
+  canLoadLeaderboard,
+  leaderboardEntries,
+  leaderboardCurrentUser,
+  leaderboardTotalPlayers,
+  leaderboardLoading,
+  leaderboardError,
+}: {
+  regionTab: RegionTab
+  canLoadLeaderboard: boolean
+  leaderboardEntries: LeaderboardEntry[]
+  leaderboardCurrentUser: LeaderboardEntry | null
+  leaderboardTotalPlayers: number
+  leaderboardLoading: boolean
+  leaderboardError: string | null
+}) {
+  const podiumEntries = leaderboardEntries.slice(0, 3)
+  const listEntries = leaderboardEntries.slice(3)
+  const currentUserInTopList = leaderboardEntries.some((entry) => entry.isCurrentUser)
+  const scopeLabel = regionTab === 'all' ? 'весь Казахстан' : regionTab
+
+  if (!canLoadLeaderboard) {
+    return (
+      <p className="lobby-modal-footnote">
+        Войди в аккаунт, чтобы открыть облачный рейтинг по Казахстану и городам.
+      </p>
+    )
+  }
+
+  if (leaderboardLoading) {
+    return <p className="lobby-modal-footnote">Загружаем живой рейтинг...</p>
+  }
+
+  if (leaderboardError) {
+    return <p className="lobby-modal-footnote">{leaderboardError}</p>
+  }
+
+  if (leaderboardEntries.length === 0) {
+    return (
+      <div className="lobby-leaderboard-empty">
+        <strong>Рейтинг пока пуст</strong>
+        <p>{LEADERBOARD_EMPTY_STATE}</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="lobby-podium-grid">
+        {podiumEntries.map((entry, index) => (
+          <article
+            key={`${entry.userId}-${entry.rank}`}
+            className={[
+              'lobby-podium-card',
+              index === 0 ? 'lobby-podium-card--first' : '',
+              entry.isCurrentUser ? 'lobby-podium-card--current' : '',
+            ].join(' ')}
+          >
+            <span className="lobby-podium-card__medal">
+              {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : '🥉'}
+            </span>
+            <span className="lobby-podium-card__rank">#{entry.rank}</span>
+            <strong>{entry.title}</strong>
+            <span>{entry.city ?? 'KZ'} • {entry.rankScore} aura</span>
+            {entry.isCurrentUser ? <span className="lobby-current-badge">Вы</span> : null}
+          </article>
+        ))}
+      </div>
+
+      {leaderboardCurrentUser ? (
+        <div className="lobby-current-rank-card">
+          <span className="lobby-current-rank-card__eyebrow">Ваше место</span>
+          <div className="lobby-current-rank-card__row">
+            <strong>
+              #{leaderboardCurrentUser.rank} • {leaderboardCurrentUser.title}
+            </strong>
+            <span className="lobby-current-badge">Вы</span>
+          </div>
+          <p>
+            {leaderboardCurrentUser.city ?? 'KZ'} • {leaderboardCurrentUser.rankScore} aura
+          </p>
+        </div>
+      ) : null}
+
+      <div className="lobby-leaderboard-list">
+        {listEntries.map((entry) => (
+          <div
+            key={`${entry.userId}-${entry.rank}`}
+            className={[
+              'lobby-list-row',
+              entry.isCurrentUser ? 'lobby-list-row--current' : '',
+            ].join(' ')}
+          >
+            <span>#{entry.rank}</span>
+            <div className="lobby-list-row__identity">
+              <strong>{entry.title}</strong>
+              <small>{entry.city ?? 'KZ'}</small>
+            </div>
+            <div className="lobby-list-row__meta">
+              {entry.isCurrentUser ? <span className="lobby-current-badge">Вы</span> : null}
+              <span>{entry.rankScore}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {leaderboardCurrentUser && !currentUserInTopList ? (
+        <div className="lobby-current-rank-card lobby-current-rank-card--floating">
+          <span className="lobby-current-rank-card__eyebrow">Ваше место вне топа</span>
+          <div className="lobby-current-rank-card__row">
+            <strong>
+              #{leaderboardCurrentUser.rank} • {leaderboardCurrentUser.title}
+            </strong>
+            <span className="lobby-current-badge">Вы</span>
+          </div>
+          <p>
+            {leaderboardCurrentUser.city ?? 'KZ'} • {leaderboardCurrentUser.rankScore} aura
+          </p>
+        </div>
+      ) : null}
+
+      <p className="lobby-modal-footnote">
+        {leaderboardTotalPlayers} игроков • {scopeLabel}
+      </p>
+    </>
+  )
+}
+
 function LobbyOverlayModal({
   activeOverlay,
   onClose,
+  initialScope,
   canLoadLeaderboard,
   leaderboardEntries,
+  leaderboardCurrentUser,
+  leaderboardTotalPlayers,
   leaderboardLoading,
   leaderboardError,
   onLeaderboardScopeChange,
 }: {
   activeOverlay: LobbyOverlay
   onClose: () => void
+  initialScope: RegionTab
   canLoadLeaderboard: boolean
   leaderboardEntries: LeaderboardEntry[]
+  leaderboardCurrentUser: LeaderboardEntry | null
+  leaderboardTotalPlayers: number
   leaderboardLoading: boolean
   leaderboardError: string | null
   onLeaderboardScopeChange: (scope: RegionTab) => void
 }) {
-  const [regionTab, setRegionTab] = useState<RegionTab>('Актау')
+  const [regionTab, setRegionTab] = useState<RegionTab>(initialScope)
+  const regionTabs = useMemo(() => createRegionTabs(initialScope === 'all' ? null : initialScope), [initialScope])
+
+  useEffect(() => {
+    setRegionTab(initialScope)
+  }, [initialScope])
 
   useEffect(() => {
     if (activeOverlay === 'leaderboard') {
       onLeaderboardScopeChange(regionTab)
     }
   }, [activeOverlay, onLeaderboardScopeChange, regionTab])
-
-  const podiumEntries = leaderboardEntries.slice(0, 3)
-  const listEntries = leaderboardEntries.slice(3)
 
   return (
     <AnimatePresence>
@@ -191,7 +336,7 @@ function LobbyOverlayModal({
               <div className="lobby-modal-body">
                 <div className="lobby-modal-header">Kazakhstan Leaderboard</div>
                 <div className="lobby-region-tabs">
-                  {REGION_TABS.map((tab) => (
+                  {regionTabs.map((tab) => (
                     <button
                       key={tab.id}
                       type="button"
@@ -205,42 +350,15 @@ function LobbyOverlayModal({
                     </button>
                   ))}
                 </div>
-                {!canLoadLeaderboard ? (
-                  <p className="lobby-modal-footnote">
-                    Sign in to open the real city leaderboard.
-                  </p>
-                ) : leaderboardLoading ? (
-                  <p className="lobby-modal-footnote">Loading live leaderboard...</p>
-                ) : leaderboardError ? (
-                  <p className="lobby-modal-footnote">{leaderboardError}</p>
-                ) : (
-                  <>
-                    <div className="lobby-podium-grid">
-                      {podiumEntries.map((entry) => (
-                        <article key={entry.rank} className="lobby-podium-card">
-                          <span className="lobby-podium-card__medal">#{entry.rank}</span>
-                          <strong>{entry.title}</strong>
-                          <span>{entry.rankScore} aura</span>
-                        </article>
-                      ))}
-                    </div>
-                    <div className="lobby-leaderboard-list">
-                      {listEntries.map((entry) => (
-                        <div key={entry.rank} className="lobby-list-row">
-                          <span>#{entry.rank}</span>
-                          <strong>
-                            {entry.title}
-                            {entry.isCurrentUser ? ' • you' : ''}
-                          </strong>
-                          <span>{entry.rankScore}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="lobby-modal-footnote">
-                      Live ranking for {regionTab === 'all' ? 'all Kazakhstan' : regionTab}.
-                    </p>
-                  </>
-                )}
+                <LeaderboardModalContent
+                  regionTab={regionTab}
+                  canLoadLeaderboard={canLoadLeaderboard}
+                  leaderboardEntries={leaderboardEntries}
+                  leaderboardCurrentUser={leaderboardCurrentUser}
+                  leaderboardTotalPlayers={leaderboardTotalPlayers}
+                  leaderboardLoading={leaderboardLoading}
+                  leaderboardError={leaderboardError}
+                />
               </div>
             ) : null}
 
@@ -315,16 +433,19 @@ function LobbyOverlayModal({
 export function HomePage() {
   const navigate = useNavigate()
   const storedProfile = useProgressStore((state) => state.profile)
-  const { cloudProfile, isAuthenticated, signOut, user } = useAuth()
+  const { isAuthenticated, signOut, user } = useAuth()
   const [activeOverlay, setActiveOverlay] = useState<LobbyOverlay>(null)
   const [isSigningOut, setIsSigningOut] = useState(false)
-  const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([])
+  const [leaderboardSnapshot, setLeaderboardSnapshot] = useState<LeaderboardSnapshot>({
+    entries: [],
+    currentUserEntry: null,
+    totalPlayers: 0,
+  })
   const [leaderboardLoading, setLeaderboardLoading] = useState(false)
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null)
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null)
 
   const profile = storedProfile
-
   const inviteUrl = useMemo(() => {
     if (typeof window === 'undefined') {
       return `https://checktheaura.game/rooms/${activeRoomCode ?? 'ROOM'}`
@@ -337,13 +458,18 @@ export function HomePage() {
   const hero = profile ? getCurrentHeroArt(profile.classId, profile.level) : fallbackHero
   const levelProgress = getLevelProgress(profile?.xp ?? 0)
   const displayName =
-    profile?.title ?? (isAuthenticated ? user?.email ?? 'Cloud Player' : 'Guest Player')
+    profile?.title ??
+    (isAuthenticated ? user?.user_metadata?.display_name ?? user?.email ?? 'Cloud Player' : 'Guest Player')
   const auraMeta = profile ? AURA_META[profile.classId] ?? AURA_META.fallback : AURA_META.fallback
   const questWidget = getQuestWidget(profile)
-  const rankValue = profile ? String(profile.rankScore ?? profile.level) : '1'
+  const rankValue = String(profile?.rankScore ?? profile?.level ?? 1)
   const winsValue = String(profile?.wins ?? 0)
   const gamesValue = String(profile?.gamesPlayed ?? 0)
   const battleLabel = profile ? '⚔ PLAY' : '⚔ CHOOSE CLASS'
+  const preferredRegionTab = useMemo<RegionTab>(() => {
+    const city = profile?.city
+    return city && city.length > 0 ? city : 'all'
+  }, [profile?.city])
 
   async function loadLeaderboard(scope: RegionTab) {
     if (!isAuthenticated || !user) {
@@ -354,8 +480,8 @@ export function HomePage() {
     setLeaderboardError(null)
 
     try {
-      const entries = await fetchLeaderboard(scope === 'all' ? 'all' : scope, user.id)
-      setLeaderboardEntries(entries)
+      const snapshot = await fetchLeaderboard(scope, user.id)
+      setLeaderboardSnapshot(snapshot)
     } catch (error) {
       setLeaderboardError(
         error instanceof Error ? error.message : 'Failed to load leaderboard.',
@@ -413,11 +539,12 @@ export function HomePage() {
         </div>
         <div className="min-w-0">
           <p className="lobby-player-card__name">{displayName}</p>
-          <span className={['lobby-aura-pill', auraMeta.className].join(' ')}>{auraMeta.label}</span>
+          <span className={['lobby-aura-pill', auraMeta.className].join(' ')}>
+            {auraMeta.label}
+          </span>
           <p className="lobby-player-card__meta">
             LVL {profile?.level ?? 1} • XP
             {profile?.city ? ` • ${profile.city}` : ''}
-            {cloudProfile ? ' • cloud' : ''}
           </p>
           <div className="lobby-player-card__xp">
             <div
@@ -568,8 +695,11 @@ export function HomePage() {
       <LobbyOverlayModal
         activeOverlay={activeOverlay}
         onClose={() => setActiveOverlay(null)}
+        initialScope={preferredRegionTab}
         canLoadLeaderboard={isAuthenticated}
-        leaderboardEntries={leaderboardEntries}
+        leaderboardEntries={leaderboardSnapshot.entries}
+        leaderboardCurrentUser={leaderboardSnapshot.currentUserEntry}
+        leaderboardTotalPlayers={leaderboardSnapshot.totalPlayers}
         leaderboardLoading={leaderboardLoading}
         leaderboardError={leaderboardError}
         onLeaderboardScopeChange={(scope) => {

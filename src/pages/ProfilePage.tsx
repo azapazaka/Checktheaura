@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useInRouterContext } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { fetchLeaderboard } from '../cloud/leaderboard-service'
 import { fetchCoachHistory } from '../cloud/profile-service'
-import type { CoachAnalysisRecord } from '../cloud/types'
+import type { CoachAnalysisRecord, LeaderboardEntry } from '../cloud/types'
 import {
   CLASS_META,
   DAILY_QUEST_DESCRIPTIONS,
@@ -36,34 +37,97 @@ const growthTracks = {
   },
 } as const
 
+function RankValue({
+  isAuthenticated,
+  isLoading,
+  entry,
+}: {
+  isAuthenticated: boolean
+  isLoading: boolean
+  entry: LeaderboardEntry | null
+}) {
+  if (!isAuthenticated) {
+    return <p className="mt-2 text-3xl font-bold text-white">Auth</p>
+  }
+
+  if (isLoading) {
+    return <p className="mt-2 text-3xl font-bold text-white">...</p>
+  }
+
+  if (!entry) {
+    return <p className="mt-2 text-3xl font-bold text-white">—</p>
+  }
+
+  return <p className="mt-2 text-3xl font-bold text-white">#{entry.rank}</p>
+}
+
 export function ProfilePage() {
   const profile = useProgressStore((state) => state.profile)
   const inRouter = useInRouterContext()
-  const { cloudProfile, isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [coachHistory, setCoachHistory] = useState<CoachAnalysisRecord[]>([])
+  const [globalRank, setGlobalRank] = useState<LeaderboardEntry | null>(null)
+  const [cityRank, setCityRank] = useState<LeaderboardEntry | null>(null)
+  const [isRankLoading, setIsRankLoading] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
       setCoachHistory([])
+      setGlobalRank(null)
+      setCityRank(null)
+      setIsRankLoading(false)
       return
     }
 
-    void fetchCoachHistory(user.id)
-      .then((data) => {
-        setCoachHistory(data)
-      })
-      .catch(() => {
-        setCoachHistory([])
-      })
-  }, [isAuthenticated, user])
+    let cancelled = false
+    const currentUserId = user.id
+
+    async function loadCloudData() {
+      setIsRankLoading(true)
+
+      try {
+        const [analysisRows, globalSnapshot, citySnapshot] = await Promise.all([
+          fetchCoachHistory(currentUserId),
+          fetchLeaderboard('all', currentUserId),
+          profile?.city
+            ? fetchLeaderboard(profile.city, currentUserId)
+            : Promise.resolve(null),
+        ])
+
+        if (cancelled) {
+          return
+        }
+
+        setCoachHistory(analysisRows)
+        setGlobalRank(globalSnapshot.currentUserEntry)
+        setCityRank(citySnapshot?.currentUserEntry ?? null)
+      } catch {
+        if (!cancelled) {
+          setCoachHistory([])
+          setGlobalRank(null)
+          setCityRank(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRankLoading(false)
+        }
+      }
+    }
+
+    void loadCloudData()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, profile?.city, user])
 
   if (!profile) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
         <h2 className="font-display text-4xl text-white">Profile is not ready yet</h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
-          Сначала выбери класс, чтобы открыть progression-профиль, историю матчей
-          и рост своего героя.
+          Сначала выбери класс, чтобы открыть progression-профиль, историю матчей и рост
+          своего героя.
         </p>
       </section>
     )
@@ -75,9 +139,8 @@ export function ProfilePage() {
   const dailyQuests = getCurrentDailyQuests(profile.dailyQuests)
   const levelProgress = getLevelProgress(profile.xp)
   const winRate =
-    profile.gamesPlayed > 0
-      ? Math.round((profile.wins / profile.gamesPlayed) * 100)
-      : 0
+    profile.gamesPlayed > 0 ? Math.round((profile.wins / profile.gamesPlayed) * 100) : 0
+  const hasCloudRank = Boolean(globalRank || cityRank)
 
   return (
     <div
@@ -139,8 +202,8 @@ export function ProfilePage() {
               <div className="mt-4 rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/78">
                 <strong className="block text-white">Develop your hero</strong>
                 <span className="mt-2 block">
-                  Attributes activate in phase 2. Пока эти треки показывают
-                  направление роста, а не раздачу пустых очков в никуда.
+                  Attributes activate in phase 2. Пока эти треки показывают направление роста,
+                  а не раздачу пустых очков в никуда.
                 </span>
               </div>
             </div>
@@ -172,23 +235,52 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              ['Rank', profile.rankScore ?? profile.level],
-              ['Win Games', profile.wins],
-              ['Games', profile.gamesPlayed],
-              ['Win Rate', `${winRate}%`],
-              ['City', cloudProfile?.city ?? profile.city ?? 'Guest'],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4"
-              >
-                <p className="text-xs uppercase tracking-[0.24em] text-white/58">{label}</p>
-                <p className="mt-2 text-3xl font-bold text-white">{value}</p>
-              </div>
-            ))}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Город</p>
+              <p className="mt-2 text-3xl font-bold text-white">{profile.city ?? 'Guest'}</p>
+            </div>
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Место по Казахстану</p>
+              <RankValue
+                isAuthenticated={isAuthenticated}
+                isLoading={isRankLoading}
+                entry={globalRank}
+              />
+            </div>
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Место в городе</p>
+              <RankValue
+                isAuthenticated={isAuthenticated}
+                isLoading={isRankLoading}
+                entry={cityRank}
+              />
+            </div>
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Win Games</p>
+              <p className="mt-2 text-3xl font-bold text-white">{profile.wins}</p>
+            </div>
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Games</p>
+              <p className="mt-2 text-3xl font-bold text-white">{profile.gamesPlayed}</p>
+            </div>
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Win Rate</p>
+              <p className="mt-2 text-3xl font-bold text-white">{winRate}%</p>
+            </div>
           </div>
+
+          {!isAuthenticated ? (
+            <div className="rounded-[1.6rem] border border-cyan-300/18 bg-cyan-400/10 px-4 py-4 text-sm leading-6 text-cyan-50/88">
+              Авторизуйся, чтобы увидеть место по Казахстану, место в своём городе и облачную
+              историю AI Coach.
+            </div>
+          ) : !isRankLoading && !hasCloudRank ? (
+            <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/72">
+              Сыграй первый облачный матч, чтобы занять место в рейтинге Казахстана и своего
+              города.
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -262,8 +354,7 @@ export function ProfilePage() {
           <div className="mt-5 space-y-3">
             {profile.history.length === 0 ? (
               <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
-                Сыграй первую тренировку, чтобы история матчей и growth-моменты
-                появились здесь.
+                Сыграй первую тренировку, чтобы история матчей и growth-моменты появились здесь.
               </p>
             ) : (
               profile.history.map((match) => (
@@ -294,9 +385,7 @@ export function ProfilePage() {
                             : 'local'}
                     </p>
                   </div>
-                  <p className="text-lg font-bold text-emerald-200">
-                    +{match.xpEarned} XP
-                  </p>
+                  <p className="text-lg font-bold text-emerald-200">+{match.xpEarned} XP</p>
                 </div>
               ))
             )}

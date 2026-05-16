@@ -85,7 +85,7 @@ export function GamePage() {
     }, 300)
 
     return () => window.clearTimeout(timeoutId)
-  }, [difficulty, gameOutcome, gameState.currentTurn, profile, runAiTurn])
+  }, [difficulty, gameOutcome, gameState.currentTurn, profile])
 
   useEffect(() => {
     if (!profile || !gameOutcome || finalizedRef.current) {

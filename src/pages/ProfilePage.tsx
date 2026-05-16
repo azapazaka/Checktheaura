@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link, useInRouterContext } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
+import { fetchCoachHistory } from '../cloud/profile-service'
+import type { CoachAnalysisRecord } from '../cloud/types'
 import {
   CLASS_META,
   DAILY_QUEST_DESCRIPTIONS,
@@ -35,6 +39,23 @@ const growthTracks = {
 export function ProfilePage() {
   const profile = useProgressStore((state) => state.profile)
   const inRouter = useInRouterContext()
+  const { cloudProfile, isAuthenticated, user } = useAuth()
+  const [coachHistory, setCoachHistory] = useState<CoachAnalysisRecord[]>([])
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setCoachHistory([])
+      return
+    }
+
+    void fetchCoachHistory(user.id)
+      .then((data) => {
+        setCoachHistory(data)
+      })
+      .catch(() => {
+        setCoachHistory([])
+      })
+  }, [isAuthenticated, user])
 
   if (!profile) {
     return (
@@ -153,10 +174,11 @@ export function ProfilePage() {
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              ['Rank', profile.level],
+              ['Rank', profile.rankScore ?? profile.level],
               ['Win Games', profile.wins],
               ['Games', profile.gamesPlayed],
               ['Win Rate', `${winRate}%`],
+              ['City', cloudProfile?.city ?? profile.city ?? 'Guest'],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -261,10 +283,50 @@ export function ProfilePage() {
                       {match.difficulty.toUpperCase()} •{' '}
                       {new Date(match.playedAt).toLocaleString('ru-RU')}
                     </p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.22em] text-white/52">
+                      Coach:{' '}
+                      {match.analysisStatus === 'ready'
+                        ? 'saved'
+                        : match.analysisStatus === 'pending'
+                          ? 'pending'
+                          : match.analysisStatus === 'failed'
+                            ? 'failed'
+                            : 'local'}
+                    </p>
                   </div>
                   <p className="text-lg font-bold text-emerald-200">
                     +{match.xpEarned} XP
                   </p>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="arcade-panel rounded-[2.5rem] p-5">
+          <h3 className="font-display text-3xl text-white">Coach History</h3>
+          <div className="mt-5 space-y-3">
+            {!isAuthenticated ? (
+              <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
+                Sign in to save AI Coach analysis and open it across devices.
+              </p>
+            ) : coachHistory.length === 0 ? (
+              <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
+                No saved coach analysis yet. Finish a cloud match to build the library.
+              </p>
+            ) : (
+              coachHistory.map((analysis) => (
+                <div
+                  key={analysis.id}
+                  className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-white">Coach score {analysis.score}/10</p>
+                    <span className="text-xs uppercase tracking-[0.22em] text-white/52">
+                      {analysis.source}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-white/72">{analysis.tip}</p>
                 </div>
               ))
             )}

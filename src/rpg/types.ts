@@ -60,6 +60,9 @@ export type MatchXpReward = {
 
 export type MatchSummary = {
   id: string
+  matchId?: string
+  coachAnalysisId?: string
+  analysisStatus?: 'pending' | 'ready' | 'failed'
   outcome: 'win' | 'loss' | 'draw'
   xpEarned: number
   playedAt: string
@@ -70,6 +73,11 @@ export type MatchSummary = {
 }
 
 export type PlayerProfile = {
+  id?: string
+  city?: string | null
+  authUserId?: string
+  isGuest?: boolean
+  rankScore?: number
   classId: RpgClass
   level: number
   xp: number

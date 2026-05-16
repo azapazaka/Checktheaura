@@ -38,6 +38,8 @@ http://localhost:5173
 ```bash
 ANTHROPIC_API_KEY=your_key_here
 ANTHROPIC_MODEL=claude-sonnet-4-20250514
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 ```
 
 Если `ANTHROPIC_API_KEY` не задан, экран результатов всё равно работает: приложение покажет локальный fallback-анализ вместо сетевого запроса.

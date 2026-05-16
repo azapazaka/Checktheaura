@@ -15,9 +15,9 @@ test('new user goes through class select, dark premium lobby, versus, battle, an
   await expect(page.getByTestId('lobby-room-panel')).toBeVisible()
   await expect(page.getByTestId('lobby-friend-slot-left')).toBeVisible()
   await expect(page.getByTestId('lobby-friend-slot-right')).toBeVisible()
-  await expect(page.getByRole('button', { name: /играть/i })).toBeVisible()
+  await expect(page.getByTestId('battle-cta')).toBeVisible()
 
-  await page.getByRole('button', { name: /играть/i }).click()
+  await page.getByTestId('battle-cta').click()
   await expect(page.getByRole('heading', { name: /versus/i })).toBeVisible()
   await expect(page.getByRole('heading', { name: /battle board/i })).toBeVisible()
 

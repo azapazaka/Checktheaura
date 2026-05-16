@@ -35,6 +35,9 @@ type ProgressState = {
   settings: StoredSettings
   lastResult: LatestResult | null
   selectClass: (classId: RpgClass) => void
+  hydrateProfile: (profile: PlayerProfile | null) => void
+  hydrateHistory: (history: MatchSummary[]) => void
+  hydrateLastResult: (result: LatestResult | null) => void
   setTheme: (theme: StoredSettings['preferredTheme']) => void
   setDifficulty: (difficulty: StoredSettings['preferredDifficulty']) => void
   finishMatch: (result: LatestResult) => void
@@ -151,6 +154,32 @@ export const useProgressStore = create<ProgressState>()(
             lastResult: null,
           }
         }),
+      hydrateProfile: (profile) =>
+        set((state) => {
+          const normalizedProfile = normalizeProfile(profile)
+
+          return {
+            profile: normalizedProfile,
+            settings: clampSettings(state.settings, normalizedProfile),
+          }
+        }),
+      hydrateHistory: (history) =>
+        set((state) => {
+          if (!state.profile) {
+            return state
+          }
+
+          return {
+            profile: {
+              ...state.profile,
+              history: history.map(normalizeMatchSummary),
+            },
+          }
+        }),
+      hydrateLastResult: (result) =>
+        set(() => ({
+          lastResult: normalizeLastResult(result),
+        })),
       setTheme: (theme) =>
         set((state) => ({
           settings: {

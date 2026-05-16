@@ -1,7 +1,9 @@
 import { startTransition, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import { buildFallbackCoachAnalysis } from '../coach/fallback'
 import type { CoachAnalyzeResponse } from '../coach/types'
+import { persistCloudMatch, persistCoachAnalysis } from '../cloud/match-service'
 import {
   CLASS_META,
   DAILY_QUEST_LABELS,
@@ -22,7 +24,14 @@ type AnalysisState = {
 export function ResultsPage() {
   const lastResult = useProgressStore((state) => state.lastResult)
   const profile = useProgressStore((state) => state.profile)
+  const hydrateHistory = useProgressStore((state) => state.hydrateHistory)
+  const hydrateLastResult = useProgressStore((state) => state.hydrateLastResult)
+  const { isAuthenticated } = useAuth()
   const [analysisState, setAnalysisState] = useState<AnalysisState | null>(null)
+  const [cloudSaveStatus, setCloudSaveStatus] = useState<
+    'idle' | 'saving-match' | 'saving-analysis' | 'saved' | 'failed'
+  >('idle')
+  const [cloudSaveError, setCloudSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!lastResult) {
@@ -117,6 +126,124 @@ export function ResultsPage() {
   const questRewardEntries = Object.entries(lastResult.dailyQuestRewards).filter(
     ([, value]) => value > 0,
   )
+
+  useEffect(() => {
+    if (!isAuthenticated || lastResult.matchId) {
+      return
+    }
+
+    let cancelled = false
+
+    const persist = async () => {
+      setCloudSaveStatus('saving-match')
+      setCloudSaveError(null)
+
+      try {
+        const { match } = await persistCloudMatch({
+          latestResult: lastResult,
+          profile,
+        })
+
+        if (cancelled) {
+          return
+        }
+
+        const updatedResult = {
+          ...lastResult,
+          matchId: match.matchId,
+          analysisStatus: 'pending' as const,
+        }
+
+        hydrateLastResult(updatedResult)
+        hydrateHistory(
+          profile.history.map((entry, index) =>
+            index === 0 && entry.id === lastResult.id
+              ? { ...entry, matchId: match.matchId, analysisStatus: 'pending' }
+              : entry,
+          ),
+        )
+        setCloudSaveStatus('saving-analysis')
+      } catch (error) {
+        if (!cancelled) {
+          setCloudSaveError(
+            error instanceof Error ? error.message : 'Failed to save match.',
+          )
+          setCloudSaveStatus('failed')
+        }
+      }
+    }
+
+    void persist()
+
+    return () => {
+      cancelled = true
+    }
+  }, [hydrateHistory, hydrateLastResult, isAuthenticated, lastResult, profile])
+
+  useEffect(() => {
+    if (!isAuthenticated || !lastResult.matchId || !analysis || lastResult.coachAnalysisId) {
+      return
+    }
+
+    let cancelled = false
+    const matchId = lastResult.matchId
+
+    const saveAnalysis = async () => {
+      try {
+        const { analysis: savedAnalysis } = await persistCoachAnalysis({
+          matchId,
+          analysis,
+          source: analysisSource ?? 'fallback',
+          status: 'ready',
+        })
+
+        if (cancelled) {
+          return
+        }
+
+        hydrateLastResult({
+          ...lastResult,
+          coachAnalysisId: savedAnalysis.id,
+          analysisStatus: savedAnalysis.status,
+        })
+        hydrateHistory(
+          profile.history.map((entry, index) =>
+            index === 0 && entry.id === lastResult.id
+              ? {
+                  ...entry,
+                  coachAnalysisId: savedAnalysis.id,
+                  analysisStatus: savedAnalysis.status,
+                }
+              : entry,
+          ),
+        )
+        setCloudSaveStatus('saved')
+      } catch (error) {
+        if (!cancelled) {
+          setCloudSaveError(
+            error instanceof Error
+              ? error.message
+              : 'Failed to save coach analysis.',
+          )
+          setCloudSaveStatus('failed')
+        }
+      }
+    }
+
+    void saveAnalysis()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    analysis,
+    analysisSource,
+    hydrateHistory,
+    hydrateLastResult,
+    isAuthenticated,
+    lastResult,
+    profile,
+  ])
 
   return (
     <div className="grid gap-5 xl:grid-cols-[0.98fr_1.02fr]">
@@ -231,6 +358,26 @@ export function ResultsPage() {
               : 'Матч сыгран без подсказки Shadow.'}
           </p>
         </div>
+
+        {isAuthenticated ? (
+          <div className="mt-5 rounded-[1.4rem] border border-white/12 bg-white/8 px-4 py-3 text-sm text-white/72">
+            Cloud save status:{' '}
+            <strong className="text-white">
+              {cloudSaveStatus === 'idle'
+                ? 'waiting'
+                : cloudSaveStatus === 'saving-match'
+                  ? 'saving match'
+                  : cloudSaveStatus === 'saving-analysis'
+                    ? 'saving analysis'
+                    : cloudSaveStatus === 'saved'
+                    ? 'saved'
+                      : 'failed'}
+            </strong>
+            {cloudSaveError ? (
+              <p className="mt-2 text-xs leading-6 text-rose-200/84">{cloudSaveError}</p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

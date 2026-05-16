@@ -262,6 +262,8 @@ export function applyQuestRewards(
 
 export function createInitialProfile(classId: RpgClass): PlayerProfile {
   return {
+    isGuest: true,
+    city: null,
     classId,
     level: 1,
     xp: 0,

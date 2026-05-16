@@ -72,10 +72,6 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
-      setCoachHistory([])
-      setGlobalRank(null)
-      setCityRank(null)
-      setIsRankLoading(false)
       return
     }
 
@@ -140,7 +136,11 @@ export function ProfilePage() {
   const levelProgress = getLevelProgress(profile.xp)
   const winRate =
     profile.gamesPlayed > 0 ? Math.round((profile.wins / profile.gamesPlayed) * 100) : 0
-  const hasCloudRank = Boolean(globalRank || cityRank)
+  const visibleCoachHistory = isAuthenticated ? coachHistory : []
+  const visibleGlobalRank = isAuthenticated ? globalRank : null
+  const visibleCityRank = isAuthenticated ? cityRank : null
+  const visibleIsRankLoading = isAuthenticated ? isRankLoading : false
+  const hasCloudRank = Boolean(visibleGlobalRank || visibleCityRank)
 
   return (
     <div
@@ -244,16 +244,16 @@ export function ProfilePage() {
               <p className="text-xs uppercase tracking-[0.24em] text-white/58">Место по Казахстану</p>
               <RankValue
                 isAuthenticated={isAuthenticated}
-                isLoading={isRankLoading}
-                entry={globalRank}
+                isLoading={visibleIsRankLoading}
+                entry={visibleGlobalRank}
               />
             </div>
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.24em] text-white/58">Место в городе</p>
               <RankValue
                 isAuthenticated={isAuthenticated}
-                isLoading={isRankLoading}
-                entry={cityRank}
+                isLoading={visibleIsRankLoading}
+                entry={visibleCityRank}
               />
             </div>
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
@@ -275,7 +275,7 @@ export function ProfilePage() {
               Авторизуйся, чтобы увидеть место по Казахстану, место в своём городе и облачную
               историю AI Coach.
             </div>
-          ) : !isRankLoading && !hasCloudRank ? (
+          ) : !visibleIsRankLoading && !hasCloudRank ? (
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/72">
               Сыграй первый облачный матч, чтобы занять место в рейтинге Казахстана и своего
               города.
@@ -399,12 +399,12 @@ export function ProfilePage() {
               <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
                 Sign in to save AI Coach analysis and open it across devices.
               </p>
-            ) : coachHistory.length === 0 ? (
+            ) : visibleCoachHistory.length === 0 ? (
               <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
                 No saved coach analysis yet. Finish a cloud match to build the library.
               </p>
             ) : (
-              coachHistory.map((analysis) => (
+              visibleCoachHistory.map((analysis) => (
                 <div
                   key={analysis.id}
                   className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4"

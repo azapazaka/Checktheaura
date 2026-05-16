@@ -293,10 +293,6 @@ function LobbyOverlayModal({
   const regionTabs = useMemo(() => createRegionTabs(initialScope === 'all' ? null : initialScope), [initialScope])
 
   useEffect(() => {
-    setRegionTab(initialScope)
-  }, [initialScope])
-
-  useEffect(() => {
     if (activeOverlay === 'leaderboard') {
       onLeaderboardScopeChange(regionTab)
     }

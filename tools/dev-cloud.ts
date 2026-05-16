@@ -1,9 +1,11 @@
 import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse as parseUrl } from 'node:url'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const toolDir = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(toolDir, '..')
@@ -47,10 +49,14 @@ const handlers = {
   '/api/rooms/move': (await import('../api/rooms/move.ts')).default,
 }
 
+type LocalApiRequest = IncomingMessage &
+  Pick<VercelRequest, 'body' | 'query' | 'headers' | 'method' | 'url'>
+type LocalApiResponse = ServerResponse<IncomingMessage> &
+  Pick<VercelResponse, 'status' | 'json'>
 type ResponseWithHelpers = ReturnType<typeof patchResponse>
 
-function patchResponse(res: Parameters<typeof createServer>[0] extends never ? never : any) {
-  const response = res as any
+function patchResponse(res: ServerResponse<IncomingMessage>) {
+  const response = res as LocalApiResponse
 
   response.status = function status(code: number) {
     response.statusCode = code
@@ -69,7 +75,7 @@ function patchResponse(res: Parameters<typeof createServer>[0] extends never ? n
   return response
 }
 
-function collectBody(req: any) {
+function collectBody(req: IncomingMessage) {
   return new Promise<unknown>((resolveBody, reject) => {
     const chunks: Buffer[] = []
     req.on('data', (chunk: Buffer) => chunks.push(chunk))
@@ -91,7 +97,7 @@ function collectBody(req: any) {
   })
 }
 
-const apiServer = createServer(async (req: any, res) => {
+const apiServer = createServer(async (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
   const url = parseUrl(req.url ?? '', true)
   const handler = handlers[url.pathname as keyof typeof handlers]
 
@@ -101,9 +107,10 @@ const apiServer = createServer(async (req: any, res) => {
   }
 
   try {
-    req.query = url.query ?? {}
-    req.body = await collectBody(req)
-    await handler(req, patchResponse(res) as ResponseWithHelpers)
+    const request = req as LocalApiRequest
+    request.query = url.query ?? {}
+    request.body = await collectBody(req)
+    await handler(request as VercelRequest, patchResponse(res) as ResponseWithHelpers)
   } catch (error) {
     patchResponse(res)
       .status(500)

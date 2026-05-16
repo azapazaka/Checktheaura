@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState, type PropsWithChildren } from 'react'
+import { startTransition, useCallback, useEffect, useState, type PropsWithChildren } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import {
   AuthContext,
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     'guest' | 'authenticated' | 'upgrading' | 'onboarding'
   >('guest')
 
-  async function refreshCloudProfile() {
+  const refreshCloudProfile = useCallback(async () => {
     if (!supabase) {
       return
     }
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setIsLoading(false)
       })
     }
-  }
+  }, [hydrateHistory, supabase])
 
   useEffect(() => {
     if (!supabase) {
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [refreshCloudProfile, supabase])
 
   const value = {
     isAuthenticated: user !== null,

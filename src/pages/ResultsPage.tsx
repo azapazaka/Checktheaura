@@ -99,7 +99,7 @@ export function ResultsPage() {
     }
   }, [lastResult])
 
-  if (!lastResult || !profile) {
+  /* if (!lastResult || !profile) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
         <h2 className="font-display text-4xl text-white">Пока нет завершенной партии</h2>
@@ -109,26 +109,20 @@ export function ResultsPage() {
         </p>
       </section>
     )
-  }
+  } */
 
   const analysis =
-    analysisState?.matchId === lastResult.id ? analysisState.payload : null
+    lastResult && analysisState?.matchId === lastResult.id
+      ? analysisState.payload
+      : null
   const analysisSource =
-    analysisState?.matchId === lastResult.id ? analysisState.source : null
+    lastResult && analysisState?.matchId === lastResult.id
+      ? analysisState.source
+      : null
   const isLoading = !analysis
-  const levelProgress = getLevelProgress(profile.xp)
-  const classMeta = CLASS_META[profile.classId]
-  const hero = getCurrentHeroArt(profile.classId, profile.level)
-  const unlockEntries = [
-    ...lastResult.newUnlocks.difficulties.map(getDifficultyLabel),
-    ...lastResult.newUnlocks.themes.map(getThemeLabel),
-  ]
-  const questRewardEntries = Object.entries(lastResult.dailyQuestRewards).filter(
-    ([, value]) => value > 0,
-  )
 
   useEffect(() => {
-    if (!isAuthenticated || lastResult.matchId) {
+    if (!isAuthenticated || !lastResult || !profile || lastResult.matchId) {
       return
     }
 
@@ -181,7 +175,14 @@ export function ResultsPage() {
   }, [hydrateHistory, hydrateLastResult, isAuthenticated, lastResult, profile])
 
   useEffect(() => {
-    if (!isAuthenticated || !lastResult.matchId || !analysis || lastResult.coachAnalysisId) {
+    if (
+      !isAuthenticated ||
+      !lastResult ||
+      !profile ||
+      !lastResult.matchId ||
+      !analysis ||
+      lastResult.coachAnalysisId
+    ) {
       return
     }
 
@@ -244,6 +245,29 @@ export function ResultsPage() {
     lastResult,
     profile,
   ])
+
+  if (!lastResult || !profile) {
+    return (
+      <section className="arcade-panel rounded-[2.5rem] p-8">
+        <h2 className="font-display text-4xl text-white">РџРѕРєР° РЅРµС‚ Р·Р°РІРµСЂС€РµРЅРЅРѕР№ РїР°СЂС‚РёРё</h2>
+        <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
+          РљРѕРіРґР° Р·Р°РєРѕРЅС‡РёС€СЊ РјР°С‚С‡, Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ XP-СЃРІРѕРґРєР°, СЃРІРµР¶РёРµ РѕС‚РєСЂС‹С‚РёСЏ Рё
+          С‡РµСЃС‚РЅС‹Р№ СЂР°Р·Р±РѕСЂ РѕС‚ AI Coach.
+        </p>
+      </section>
+    )
+  }
+
+  const levelProgress = getLevelProgress(profile.xp)
+  const classMeta = CLASS_META[profile.classId]
+  const hero = getCurrentHeroArt(profile.classId, profile.level)
+  const unlockEntries = [
+    ...lastResult.newUnlocks.difficulties.map(getDifficultyLabel),
+    ...lastResult.newUnlocks.themes.map(getThemeLabel),
+  ]
+  const questRewardEntries = Object.entries(lastResult.dailyQuestRewards).filter(
+    ([, value]) => value > 0,
+  )
 
   return (
     <div className="grid gap-5 xl:grid-cols-[0.98fr_1.02fr]">

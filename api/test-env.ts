@@ -13,7 +13,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     })
 
-    const { data, error } = await supabase.from('profiles').select('id').limit(1)
+    const { data, error } = await supabase.rpc('get_leaderboard', {
+      city_filter: null,
+    })
 
     return res.status(200).json({
       success: true,

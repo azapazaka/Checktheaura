@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
-import { createInitialProfile } from '../../src/rpg/progression'
-import type { MatchSummary, PlayerProfile } from '../../src/rpg/types'
-import { mapPlayerProfileToCloudPayload } from '../../src/cloud/mappers'
-import { buildRankScore, createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase'
+import { createInitialProfile } from '../../src/rpg/progression.js'
+import type { MatchSummary, PlayerProfile } from '../../src/rpg/types.js'
+import { mapPlayerProfileToCloudPayload } from '../../src/cloud/mappers.js'
+import { buildRankScore, createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
 
 const payloadSchema = z.object({
   classId: z.enum(['warrior', 'strategist', 'shadow']),

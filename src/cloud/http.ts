@@ -41,7 +41,7 @@ export async function authorizedJsonFetch<T>(path: string, init: RequestInit = {
   })
 
   if (!response.ok) {
-    if (response.status === 404) {
+    if (response.status === 404 || response.status === 502 || response.status === 503) {
       throw new Error(getLocalApiHint())
     }
 

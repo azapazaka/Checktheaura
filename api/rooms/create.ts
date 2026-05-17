@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createInitialGameState } from '../../src/game/engine'
-import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase'
+import { createInitialGameState } from '../../src/game/engine.js'
+import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
 
 function generateRoomCode() {
   return Math.random().toString(36).slice(2, 7).toUpperCase()

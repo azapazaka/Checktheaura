@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx ./tools/dev-cloud.ts",
+    "dev:vite": "vite",
     "dev:cloud": "tsx ./tools/dev-cloud.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

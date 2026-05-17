@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
-import { applyMove, getGameOutcome, getLegalMoves } from '../../src/game/engine'
-import type { Move, PieceColor } from '../../src/game/types'
-import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase'
+import { applyMove, getGameOutcome, getLegalMoves } from '../../src/game/engine.js'
+import type { BoardCoord, Move, PieceColor } from '../../src/game/types.js'
+import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
 
 const coordSchema = z.object({
   row: z.number().int().min(0).max(7),
@@ -32,7 +32,7 @@ function sameMove(left: Move, right: Move) {
     sameCoord(left.from, right.from) &&
     sameCoord(left.to, right.to) &&
     left.captured.length === right.captured.length &&
-    left.captured.every((coord, index) => sameCoord(coord, right.captured[index]))
+    left.captured.every((coord: BoardCoord, index: number) => sameCoord(coord, right.captured[index]))
   )
 }
 
@@ -79,7 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw new Error('It is not your turn.')
     }
 
-    const legalMove = getLegalMoves(gameState).find((candidate) => sameMove(candidate, move))
+    const legalMove = getLegalMoves(gameState).find((candidate: Move) => sameMove(candidate, move))
     if (!legalMove) {
       throw new Error('Illegal move.')
     }

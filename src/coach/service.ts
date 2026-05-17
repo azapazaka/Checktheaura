@@ -41,21 +41,51 @@ export const coachAnalyzeRequestSchema = z.object({
   }),
 })
 
-function buildPrompt(payload: CoachAnalyzeRequest) {
-  return [
-    'Ты тренер по шашкам. Верни только строгий JSON с ключами highlights, mistakes, tip, score.',
-    'highlights — массив из 2 строк, tip — одна практическая рекомендация, score — число от 1 до 10.',
-    'mistakes — массив объектов (может быть пустым, если ошибок нет). Каждый объект должен иметь:',
-    '  - turnNumber: номер хода из лога, где была совершена ошибка',
-    '  - madeMove: { from: { row, col }, to: { row, col } } — какой ход сделал игрок',
-    '  - betterMove: { from: { row, col }, to: { row, col } } — какой ход был бы лучше',
-    '  - explanation: почему это ошибка (на русском)',
-    `Игрок: ${payload.playerColor}`,
-    `Сложность: ${payload.difficulty}`,
-    `Итог: winner=${payload.result.winner ?? 'draw'}, reason=${payload.result.reason}`,
-    `XP total: ${payload.xpSummary.total}`,
-    `Ходы партии: ${JSON.stringify(payload.moves)}`,
-  ].join('\n')
+const COACH_SYSTEM_PROMPT = `You are an elite, highly analytical checkers coach. Your task is to analyze a game of checkers played by a user against an AI and provide a structured, professional, and insightful critique in Russian.
+
+You MUST respond with a strictly formatted JSON object matching the following TypeScript schema:
+{
+  "highlights": [string, string], // EXACTLY 2 concise, positive statements about the user's strong strategic points or good play decisions during the match.
+  "mistakes": Array<{
+    "turnNumber": number,          // The 1-based turn number where the mistake occurred (from the moves log).
+    "madeMove": { 
+      "from": { "row": number, "col": number }, 
+      "to": { "row": number, "col": number } 
+    },
+    "betterMove": { 
+      "from": { "row": number, "col": number }, 
+      "to": { "row": number, "col": number } 
+    },
+    "explanation": string          // Clear, educational explanation in Russian explaining why the user's move was a mistake and why the alternative move was strategically superior.
+  }>,
+  "tip": string,                   // A high-level, actionable piece of strategic checkers advice in Russian based on the general patterns observed in this game (e.g., control of the center, protecting flanks, anticipating forks/double-jumps).
+  "score": number                  // An overall evaluation score of the user's performance, from 1 (poor) to 10 (flawless).
+}
+
+CRITICAL CONSTRAINTS:
+1. Your entire response must be a single, valid JSON object. Do not wrap it in markdown code blocks like \`\`\`json. Return ONLY the raw JSON string.
+2. All text (highlights, explanations, tips) must be in Russian.
+3. Keep the tone professional, educational, and encouraging.
+4. Focus your mistakes analysis on actual tactical errors (such as missing a jump, walking into a double-jump, letting the opponent get a King unnecessarily, or giving up control of the center diagonal). If the player played very well and there are no notable tactical mistakes, you may leave the "mistakes" array empty.`;
+
+function buildUserPrompt(payload: CoachAnalyzeRequest) {
+  return JSON.stringify({
+    playerColor: payload.playerColor,
+    difficulty: payload.difficulty,
+    outcome: {
+      winner: payload.result.winner ?? 'draw',
+      reason: payload.result.reason,
+    },
+    xpEarned: payload.xpSummary.total,
+    movesLog: payload.moves.map((m) => ({
+      turn: m.turn,
+      player: m.player,
+      from: m.from,
+      to: m.to,
+      captured: m.captured,
+      promoted: m.promoted,
+    })),
+  }, null, 2)
 }
 
 function extractTextResponse(data: unknown) {
@@ -141,8 +171,12 @@ async function makeRequest(
         max_tokens: 500,
         messages: [
           {
+            role: 'system',
+            content: COACH_SYSTEM_PROMPT,
+          },
+          {
             role: 'user',
-            content: buildPrompt(payload),
+            content: buildUserPrompt(payload),
           },
         ],
         response_format: {
@@ -175,10 +209,11 @@ async function makeRequest(
       model,
       max_tokens: 500,
       temperature: 0.4,
+      system: COACH_SYSTEM_PROMPT,
       messages: [
         {
           role: 'user',
-          content: buildPrompt(payload),
+          content: buildUserPrompt(payload),
         },
       ],
     }),

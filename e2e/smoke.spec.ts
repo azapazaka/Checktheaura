@@ -11,7 +11,7 @@ test('new user goes through class select, dark premium lobby, versus, battle, an
 
   await page.getByTestId('class-select-strategist').click()
   await expect(page.getByTestId('lobby-shell')).toBeVisible()
-  await expect(page.getByTestId('lobby-profile-panel')).toBeVisible()
+  await expect(page.getByTestId('lobby-player-hud')).toBeVisible()
   await expect(page.getByTestId('lobby-room-panel')).toHaveCount(0)
   await expect(page.getByTestId('lobby-friend-slot-left')).toBeVisible()
   await expect(page.getByTestId('lobby-friend-slot-right')).toBeVisible()

@@ -2,7 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import type { LatestResult } from '../../src/store/progress-store'
 import type { PlayerProfile } from '../../src/rpg/types'
-import { buildRankScore, createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase'
+import {
+  buildRankScore,
+  createServiceSupabaseClient,
+  ensureCloudProfileExists,
+  requireAuthenticatedUser,
+} from '../_lib/supabase'
 
 const requestSchema = z.object({
   latestResult: z.any(),
@@ -22,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       profile: PlayerProfile
     }
     const serviceClient = createServiceSupabaseClient()
+    await ensureCloudProfileExists(serviceClient, user)
 
     const { data: match, error: matchError } = await serviceClient
       .from('matches')

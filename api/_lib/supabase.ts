@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js'
 import type { VercelRequest } from '@vercel/node'
 
 function getRequiredEnv(name: string) {
@@ -72,6 +73,25 @@ export async function requireAuthenticatedUser(req: VercelRequest) {
   }
 
   return user
+}
+
+export async function ensureCloudProfileExists(
+  serviceClient: Pick<ReturnType<typeof createServiceSupabaseClient>, 'from'>,
+  user: Pick<User, 'id'>,
+) {
+  const { error } = await serviceClient.from('profiles').upsert(
+    {
+      id: user.id,
+    },
+    {
+      onConflict: 'id',
+      ignoreDuplicates: true,
+    },
+  )
+
+  if (error) {
+    throw error
+  }
 }
 
 export function buildRankScore({

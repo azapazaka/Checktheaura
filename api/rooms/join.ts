@@ -1,10 +1,30 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { z } from 'zod'
-import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
+import { ZodError, z } from 'zod'
+import {
+  createServiceSupabaseClient,
+  ensureCloudProfileExists,
+  requireAuthenticatedUser,
+} from '../_lib/supabase.js'
 
 const requestSchema = z.object({
-  roomCode: z.string().min(5).max(5),
+  roomCode: z.string().trim().min(5).max(5).transform((value) => value.toUpperCase()),
 })
+
+class JoinRoomError extends Error {
+  status: number
+  code: 'ROOM_NOT_FOUND' | 'ROOM_FULL' | 'UNAUTHORIZED' | 'INVALID_ROOM_CODE'
+
+  constructor(
+    message: string,
+    status: number,
+    code: 'ROOM_NOT_FOUND' | 'ROOM_FULL' | 'UNAUTHORIZED' | 'INVALID_ROOM_CODE',
+  ) {
+    super(message)
+    this.name = 'JoinRoomError'
+    this.status = status
+    this.code = code
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -13,9 +33,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const user = await requireAuthenticatedUser(req)
+    let user
+    try {
+      user = await requireAuthenticatedUser(req)
+    } catch {
+      throw new JoinRoomError('Sign in to join this room.', 401, 'UNAUTHORIZED')
+    }
+
     const { roomCode } = requestSchema.parse(req.body)
     const serviceClient = createServiceSupabaseClient()
+    await ensureCloudProfileExists(serviceClient, user)
 
     const { data: room, error: roomError } = await serviceClient
       .from('rooms')
@@ -24,11 +51,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single()
 
     if (roomError || !room) {
-      throw new Error('Room not found.')
+      throw new JoinRoomError('Комната не найдена.', 404, 'ROOM_NOT_FOUND')
     }
 
     if (room.guest_user_id && room.guest_user_id !== user.id && room.host_user_id !== user.id) {
-      throw new Error('Room is already full.')
+      throw new JoinRoomError('Комната уже занята.', 409, 'ROOM_FULL')
     }
 
     if (room.host_user_id === user.id) {
@@ -58,7 +85,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ room: data })
   } catch (error) {
+    if (error instanceof JoinRoomError) {
+      return res.status(error.status).json({ error: error.message, code: error.code })
+    }
+
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        error: 'Код комнаты должен содержать 5 символов.',
+        code: 'INVALID_ROOM_CODE',
+      })
+    }
+
     const message = error instanceof Error ? error.message : 'Failed to join room'
-    return res.status(400).json({ error: message })
+    return res.status(400).json({ error: message, code: 'INVALID_ROOM_CODE' })
   }
 }

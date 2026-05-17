@@ -2,7 +2,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { applyMove, getGameOutcome, getLegalMoves } from '../../src/game/engine.js'
 import type { BoardCoord, Move, PieceColor } from '../../src/game/types.js'
-import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
+import {
+  createServiceSupabaseClient,
+  ensureCloudProfileExists,
+  requireAuthenticatedUser,
+} from '../_lib/supabase.js'
 
 const coordSchema = z.object({
   row: z.number().int().min(0).max(7),
@@ -16,7 +20,7 @@ const moveSchema = z.object({
 })
 
 const requestSchema = z.object({
-  roomCode: z.string().min(5).max(5),
+  roomCode: z.string().trim().min(5).max(5).transform((value) => value.toUpperCase()),
   move: moveSchema,
 })
 
@@ -61,6 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = await requireAuthenticatedUser(req)
     const { roomCode, move } = requestSchema.parse(req.body)
     const serviceClient = createServiceSupabaseClient()
+    await ensureCloudProfileExists(serviceClient, user)
 
     const { data: room, error: roomError } = await serviceClient
       .from('rooms')

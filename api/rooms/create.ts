@@ -1,9 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createInitialGameState } from '../../src/game/engine.js'
-import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
+import {
+  createServiceSupabaseClient,
+  ensureCloudProfileExists,
+  requireAuthenticatedUser,
+} from '../_lib/supabase.js'
 
 function generateRoomCode() {
   return Math.random().toString(36).slice(2, 7).toUpperCase()
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === '23505'
+  )
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -15,25 +28,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const user = await requireAuthenticatedUser(req)
     const serviceClient = createServiceSupabaseClient()
-    const roomCode = generateRoomCode()
+    await ensureCloudProfileExists(serviceClient, user)
 
-    const { data, error } = await serviceClient
-      .from('rooms')
-      .insert({
-        room_code: roomCode,
-        host_user_id: user.id,
-        status: 'waiting',
-        game_state: createInitialGameState(),
-        current_turn: 'white',
-      })
-      .select('*')
-      .single()
+    let lastError: unknown = null
 
-    if (error) {
-      throw error
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const roomCode = generateRoomCode()
+      const { data, error } = await serviceClient
+        .from('rooms')
+        .insert({
+          room_code: roomCode,
+          host_user_id: user.id,
+          status: 'waiting',
+          game_state: createInitialGameState(),
+          current_turn: 'white',
+        })
+        .select('*')
+        .single()
+
+      if (!error) {
+        return res.status(200).json({ room: data })
+      }
+
+      lastError = error
+
+      if (!isUniqueConstraintError(error)) {
+        throw error
+      }
     }
 
-    return res.status(200).json({ room: data })
+    throw lastError instanceof Error ? lastError : new Error('Failed to generate a unique room code.')
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create room'
     return res.status(400).json({ error: message })

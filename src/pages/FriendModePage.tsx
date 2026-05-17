@@ -34,6 +34,11 @@ export function FriendModePage() {
       return
     }
 
+    if (normalizedCode.length !== 5) {
+      setErrorMessage('Код комнаты должен содержать 5 символов.')
+      return
+    }
+
     setErrorMessage(null)
     setIsJoining(true)
 
@@ -156,7 +161,7 @@ export function FriendModePage() {
                   value={roomCode}
                   onChange={(event) => setRoomCode(event.target.value)}
                   placeholder="A1B2C"
-                  maxLength={8}
+                  maxLength={5}
                   className="rounded-[1.4rem] border border-white/12 bg-black/18 px-4 py-4 font-mono text-lg uppercase tracking-[0.12em] text-white outline-none placeholder:text-white/28"
                 />
               </label>

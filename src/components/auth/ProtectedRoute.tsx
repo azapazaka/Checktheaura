@@ -1,9 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
-
-function buildNextPath(pathname: string, search: string, hash: string) {
-  return encodeURIComponent(`${pathname}${search}${hash}`)
-}
+import { buildNextPath } from '../../auth/next-path'
 
 export function ProtectedRoute() {
   const location = useLocation()

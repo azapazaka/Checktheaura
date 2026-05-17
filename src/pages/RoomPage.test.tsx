@@ -1,13 +1,19 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { AuthorizedFetchError } from '../cloud/http'
+import type { RoomRecord } from '../cloud/types'
 import { createInitialGameState } from '../game/engine'
 import { createInitialProfile } from '../rpg/progression'
 import { useProgressStore } from '../store/progress-store'
 import { AuthTestProvider } from '../test/AuthTestProvider'
 import { createMockUser } from '../test/auth-mocks'
-import type { RoomRecord } from '../cloud/types'
 import { RoomPage } from './RoomPage'
+
+function LocationProbe() {
+  const location = useLocation()
+  return <div>{`${location.pathname}${location.search}`}</div>
+}
 
 const fetchRoomMock = vi.fn()
 const joinRoomMock = vi.fn()
@@ -80,5 +86,61 @@ describe('RoomPage', () => {
 
     expect(fetchRoomMock).toHaveBeenCalledWith('ABCDE')
     expect(joinRoomMock).toHaveBeenCalledWith('ABCDE')
+  })
+
+  test('shows a user-facing full room message', async () => {
+    const user = createMockUser({ id: 'outsider-user-id' })
+
+    useProgressStore.setState({
+      ...useProgressStore.getInitialState(),
+      profile: createInitialProfile('strategist'),
+    })
+
+    fetchRoomMock.mockResolvedValue(null)
+    joinRoomMock.mockRejectedValue(
+      new AuthorizedFetchError('Комната уже занята.', 409, 'ROOM_FULL'),
+    )
+
+    render(
+      <AuthTestProvider
+        value={{
+          isAuthenticated: true,
+          user,
+        }}
+      >
+        <MemoryRouter initialEntries={['/rooms/abcde']}>
+          <Routes>
+            <Route path="/rooms/:roomCode" element={<RoomPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthTestProvider>,
+    )
+
+    expect(await screen.findByText(/комната уже занята двумя игроками/i)).toBeInTheDocument()
+  })
+
+  test('redirects incomplete cloud users into onboarding while keeping the room path', async () => {
+    render(
+      <AuthTestProvider
+        value={{
+          isAuthenticated: true,
+          user: createMockUser(),
+          sessionMode: 'onboarding',
+        }}
+      >
+        <MemoryRouter initialEntries={['/rooms/abcde']}>
+          <Routes>
+            <Route path="/rooms/:roomCode" element={<RoomPage />} />
+            <Route path="/onboarding" element={<LocationProbe />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthTestProvider>,
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('/onboarding?next=%2Frooms%2Fabcde'),
+      ).toBeInTheDocument()
+    })
   })
 })

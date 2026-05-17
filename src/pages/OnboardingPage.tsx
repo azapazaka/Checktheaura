@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { appendNextParam, getSafeNextPath } from '../auth/next-path'
 import { DEFAULT_CITY, KAZAKHSTAN_CITIES } from '../cloud/cities'
 import { readGuestImportDecision } from '../cloud/storage'
 import { CLASS_META, getVisibleStarterClasses } from '../rpg/meta'
@@ -13,8 +14,10 @@ const CLASS_STORIES = {
 
 export function OnboardingPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { completeOnboarding, isAuthenticated, isLoading, localGuestProfile, sessionMode } =
     useAuth()
+  const nextPath = getSafeNextPath(searchParams.get('next'))
   const importDecision = readGuestImportDecision()
   const isImportFlow = importDecision === 'import'
   const starterClasses = getVisibleStarterClasses()
@@ -32,11 +35,11 @@ export function OnboardingPage() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth?next=/onboarding" replace />
+    return <Navigate to={appendNextParam('/auth', appendNextParam('/onboarding', nextPath))} replace />
   }
 
   if (sessionMode === 'authenticated') {
-    return <Navigate to="/" replace />
+    return <Navigate to={nextPath} replace />
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -57,7 +60,7 @@ export function OnboardingPage() {
       return
     }
 
-    navigate('/', { replace: true })
+    navigate(nextPath, { replace: true })
   }
 
   return (

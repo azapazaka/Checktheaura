@@ -1,5 +1,21 @@
 import { getSupabaseBrowserClient } from '../lib/supabase/client'
 
+export class AuthorizedFetchError extends Error {
+  status: number
+  code?: string
+
+  constructor(message: string, status: number, code?: string) {
+    super(message)
+    this.name = 'AuthorizedFetchError'
+    this.status = status
+    this.code = code
+  }
+}
+
+export function isAuthorizedFetchError(error: unknown): error is AuthorizedFetchError {
+  return error instanceof AuthorizedFetchError
+}
+
 function getLocalApiHint() {
   if (typeof window === 'undefined') {
     return 'Cloud API routes are unavailable.'
@@ -41,12 +57,22 @@ export async function authorizedJsonFetch<T>(path: string, init: RequestInit = {
   })
 
   if (!response.ok) {
-    if (response.status === 404 || response.status === 502 || response.status === 503) {
-      throw new Error(getLocalApiHint())
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: string
+      code?: string
+    }
+    if (
+      (response.status === 404 || response.status === 502 || response.status === 503) &&
+      !payload.error
+    ) {
+      throw new AuthorizedFetchError(getLocalApiHint(), response.status)
     }
 
-    const payload = (await response.json().catch(() => ({}))) as { error?: string }
-    throw new Error(payload.error ?? `Request failed with ${response.status}`)
+    throw new AuthorizedFetchError(
+      payload.error ?? `Request failed with ${response.status}`,
+      response.status,
+      payload.code,
+    )
   }
 
   return (await response.json()) as T

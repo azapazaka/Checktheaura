@@ -1,24 +1,27 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { appendNextParam, getSafeNextPath } from '../auth/next-path'
 import { writeGuestImportDecision } from '../cloud/storage'
 import { CLASS_META } from '../rpg/meta'
 
 export function UpgradePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isAuthenticated, isLoading, localGuestProfile, sessionMode } = useAuth()
   const [pendingChoice, setPendingChoice] = useState<'import' | 'fresh' | null>(null)
+  const nextPath = getSafeNextPath(searchParams.get('next'))
 
   if (isLoading) {
     return null
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth?next=/upgrade" replace />
+    return <Navigate to={appendNextParam('/auth', appendNextParam('/upgrade', nextPath))} replace />
   }
 
   if (sessionMode === 'authenticated') {
-    return <Navigate to="/" replace />
+    return <Navigate to={nextPath} replace />
   }
 
   const classMeta = localGuestProfile ? CLASS_META[localGuestProfile.classId] : null
@@ -63,7 +66,7 @@ export function UpgradePage() {
             onClick={() => {
               setPendingChoice('import')
               writeGuestImportDecision('import')
-              navigate('/onboarding', { replace: true })
+              navigate(appendNextParam('/onboarding', nextPath), { replace: true })
             }}
             className="rounded-[1.8rem] border border-emerald-300/24 bg-emerald-400/12 px-5 py-5 text-left transition hover:border-emerald-200/42"
           >
@@ -79,7 +82,7 @@ export function UpgradePage() {
             onClick={() => {
               setPendingChoice('fresh')
               writeGuestImportDecision('fresh')
-              navigate('/onboarding', { replace: true })
+              navigate(appendNextParam('/onboarding', nextPath), { replace: true })
             }}
             className="rounded-[1.8rem] border border-white/14 bg-white/8 px-5 py-5 text-left transition hover:border-white/26"
           >

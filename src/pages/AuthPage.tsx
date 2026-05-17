@@ -1,17 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { appendNextParam, getSafeNextPath } from '../auth/next-path'
 import brandCrest from '../assets/brand-crest.png'
-
 type AuthMode = 'sign-in' | 'sign-up'
-
-function getSafeNextPath(value: string | null) {
-  if (!value || !value.startsWith('/')) {
-    return '/'
-  }
-
-  return value === '/auth' ? '/' : value
-}
 
 export function AuthPage() {
   const navigate = useNavigate()
@@ -39,9 +31,9 @@ export function AuthPage() {
     if (!isLoading && isAuthenticated) {
       navigate(
         sessionMode === 'upgrading'
-          ? '/upgrade'
+          ? appendNextParam('/upgrade', nextPath)
           : sessionMode === 'onboarding'
-            ? '/onboarding'
+            ? appendNextParam('/onboarding', nextPath)
             : nextPath,
         { replace: true },
       )

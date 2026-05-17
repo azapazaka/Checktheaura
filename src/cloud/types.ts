@@ -65,6 +65,11 @@ export type CoachAnalysisRecord = {
 }
 
 export type RoomStatus = 'waiting' | 'active' | 'completed'
+export type RoomJoinErrorCode =
+  | 'ROOM_NOT_FOUND'
+  | 'ROOM_FULL'
+  | 'UNAUTHORIZED'
+  | 'INVALID_ROOM_CODE'
 
 export type RoomParticipant = {
   userId: string

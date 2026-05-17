@@ -52,4 +52,31 @@ describe('OnboardingPage', () => {
       importGuestProgress: false,
     })
   })
+
+  test('returns the player to the invited room after onboarding', async () => {
+    const user = userEvent.setup()
+    const completeOnboarding = vi.fn().mockResolvedValue({ error: null })
+
+    render(
+      <AuthTestProvider
+        value={{
+          isAuthenticated: true,
+          user: createMockUser(),
+          sessionMode: 'onboarding',
+          completeOnboarding,
+        }}
+      >
+        <MemoryRouter initialEntries={['/onboarding?next=%2Frooms%2FABCDE']}>
+          <Routes>
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/rooms/:roomCode" element={<div>room landing</div>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthTestProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /войти в арену/i }))
+
+    expect(await screen.findByText(/room landing/i)).toBeInTheDocument()
+  })
 })

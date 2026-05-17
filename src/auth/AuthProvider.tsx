@@ -221,7 +221,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         error: error?.message ?? null,
       }
     },
-    signInWithGoogle: async () => {
+    signInWithGoogle: async (redirectPath?: string) => {
       if (!supabase) {
         return getMissingConfigResult()
       }
@@ -229,7 +229,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const redirectTo =
         typeof window === 'undefined'
           ? undefined
-          : `${window.location.origin}/auth`
+          : redirectPath
+            ? `${window.location.origin}${redirectPath}`
+            : window.location.href
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -266,7 +268,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const redirectTo =
         typeof window === 'undefined'
           ? undefined
-          : `${window.location.origin}/auth`
+          : window.location.href
 
       const { data, error } = await supabase.auth.signUp({
         email,

@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
+import { appendNextParam } from '../auth/next-path'
+import { useAuth } from '../auth/AuthContext'
+import { isAuthorizedFetchError } from '../cloud/http'
+import {
+  fetchRoom,
+  joinRoom,
+  moveInRoom,
+  subscribeToRoom,
+  unsubscribeFromRoom,
+} from '../cloud/room-service'
+import type { RoomJoinErrorCode, RoomRecord } from '../cloud/types'
 import { getGameOutcome, getLegalMoves } from '../game/engine'
 import type { BoardCoord, PieceColor } from '../game/types'
-import { useAuth } from '../auth/AuthContext'
-import { fetchRoom, joinRoom, moveInRoom, subscribeToRoom, unsubscribeFromRoom } from '../cloud/room-service'
-import type { RoomRecord } from '../cloud/types'
 import { getBattlePiecePresentation } from '../rpg/meta'
 import { useProgressStore } from '../store/progress-store'
 
@@ -20,19 +28,42 @@ function countPieces(room: RoomRecord, color: PieceColor) {
   return room.game_state.board.flat().filter((piece) => piece?.color === color).length
 }
 
+function getRoomErrorMessage(code?: RoomJoinErrorCode, fallback?: string) {
+  switch (code) {
+    case 'ROOM_NOT_FOUND':
+      return 'Комната не найдена. Проверь код или попроси новый invite-link.'
+    case 'ROOM_FULL':
+      return 'Комната уже занята двумя игроками.'
+    case 'UNAUTHORIZED':
+      return 'Войди в облачный аккаунт, чтобы присоединиться к комнате.'
+    case 'INVALID_ROOM_CODE':
+      return 'Код комнаты должен содержать 5 символов.'
+    default:
+      return fallback ?? 'Эту комнату не удалось загрузить.'
+  }
+}
+
 export function RoomPage() {
   const { roomCode = '' } = useParams()
+  const location = useLocation()
   const normalizedRoomCode = roomCode.trim().toUpperCase()
-  const { user } = useAuth()
+  const {
+    user,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    isProfileLoading,
+    sessionMode,
+  } = useAuth()
   const profile = useProgressStore((state) => state.profile)
   const [room, setRoom] = useState<RoomRecord | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isJoining, setIsJoining] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [selectedSquare, setSelectedSquare] = useState<BoardCoord | null>(null)
   const [isSubmittingMove, setIsSubmittingMove] = useState(false)
+  const nextPath = `${location.pathname}${location.search}${location.hash}`
 
   useEffect(() => {
-    if (!user || !normalizedRoomCode) {
+    if (!user || !profile || !normalizedRoomCode) {
       return
     }
 
@@ -40,6 +71,7 @@ export function RoomPage() {
 
     const load = async () => {
       try {
+        setIsJoining(true)
         let nextRoom = await fetchRoom(normalizedRoomCode)
 
         if (!nextRoom) {
@@ -62,12 +94,16 @@ export function RoomPage() {
       } catch (error) {
         if (isMounted) {
           setErrorMessage(
-            error instanceof Error ? error.message : 'Не удалось загрузить комнату.',
+            isAuthorizedFetchError(error)
+              ? getRoomErrorMessage(error.code as RoomJoinErrorCode | undefined, error.message)
+              : error instanceof Error
+                ? getRoomErrorMessage(undefined, error.message)
+                : 'Не удалось загрузить комнату.',
           )
         }
       } finally {
         if (isMounted) {
-          setIsLoading(false)
+          setIsJoining(false)
         }
       }
     }
@@ -84,10 +120,9 @@ export function RoomPage() {
       isMounted = false
       unsubscribeFromRoom(channel)
     }
-  }, [normalizedRoomCode, user])
+  }, [normalizedRoomCode, profile, user])
 
-  const currentPlayerColor =
-    room && user ? roomPlayerColor(room, user.id) : null
+  const currentPlayerColor = room && user ? roomPlayerColor(room, user.id) : null
   const legalMoves = room ? getLegalMoves(room.game_state) : []
   const selectedMoves = selectedSquare
     ? legalMoves.filter((move) => isSameCoord(move.from, selectedSquare))
@@ -102,20 +137,49 @@ export function RoomPage() {
 
     return `${window.location.origin}/rooms/${normalizedRoomCode}`
   }, [normalizedRoomCode])
+  const isWaitingForRoom =
+    Boolean(user && profile && normalizedRoomCode) && !room && !errorMessage
 
-  if (isLoading) {
-    return null
+  if (isAuthLoading || isProfileLoading || isWaitingForRoom) {
+    return (
+      <section className="arcade-panel rounded-[2.5rem] p-8 text-center">
+        <p className="arcade-kicker">Room Sync</p>
+        <h2 className="mt-3 font-display text-4xl text-white">Поднимаем комнату...</h2>
+      </section>
+    )
   }
 
-  if (!user || !profile) {
-    return null
+  if (!isAuthenticated || !user) {
+    return <Navigate to={appendNextParam('/auth', nextPath)} replace />
+  }
+
+  if (!profile) {
+    if (sessionMode === 'upgrading') {
+      return <Navigate to={appendNextParam('/upgrade', nextPath)} replace />
+    }
+
+    if (sessionMode === 'onboarding') {
+      return <Navigate to={appendNextParam('/onboarding', nextPath)} replace />
+    }
+
+    return (
+      <section className="arcade-panel rounded-[2.5rem] p-8 text-center">
+        <p className="arcade-kicker">Cloud Profile</p>
+        <h2 className="mt-3 font-display text-4xl text-white">Сначала подготовим профиль</h2>
+        <p className="mt-4 text-white/72">
+          Заверши облачный профиль, и мы сразу вернём тебя в комнату.
+        </p>
+      </section>
+    )
   }
 
   if (errorMessage || !room || !currentPlayerColor) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
         <h2 className="font-display text-4xl text-white">Комната недоступна</h2>
-        <p className="mt-4 text-white/72">{errorMessage ?? 'Эту комнату не удалось загрузить.'}</p>
+        <p className="mt-4 text-white/72">
+          {errorMessage ?? 'Эту комнату не удалось загрузить.'}
+        </p>
       </section>
     )
   }
@@ -132,6 +196,11 @@ export function RoomPage() {
               Комната {room.room_code}
             </h1>
             <p className="mt-3 text-sm text-white/68">{playerLabel}</p>
+            {isJoining ? (
+              <p className="mt-3 text-xs uppercase tracking-[0.22em] text-amber-100/78">
+                Подключаем к дуэли...
+              </p>
+            ) : null}
           </div>
           <div className="flex gap-3">
             <button
@@ -166,11 +235,17 @@ export function RoomPage() {
           <>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {[
-                ['Текущий ход', room.game_state.currentTurn === currentPlayerColor ? 'Твой ход' : 'Ход врага'],
+                [
+                  'Текущий ход',
+                  room.game_state.currentTurn === currentPlayerColor ? 'Твой ход' : 'Ход врага',
+                ],
                 ['Твои фигуры', String(currentPlayerColor === 'white' ? whiteUnits : blackUnits)],
                 ['Фигуры врага', String(currentPlayerColor === 'white' ? blackUnits : whiteUnits)],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
+                <div
+                  key={label}
+                  className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4"
+                >
                   <p className="text-xs uppercase tracking-[0.22em] text-white/58">{label}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{value}</p>
                 </div>
@@ -279,7 +354,10 @@ export function RoomPage() {
               ['Счётчик ходов', String(room.game_state.moves.length)],
               ['Текущий ход', room.game_state.currentTurn],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4">
+              <div
+                key={label}
+                className="rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4"
+              >
                 <p className="text-xs uppercase tracking-[0.22em] text-white/58">{label}</p>
                 <p className="mt-2 text-sm leading-6 text-white/82">{value}</p>
               </div>

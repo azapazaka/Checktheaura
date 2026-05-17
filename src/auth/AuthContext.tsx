@@ -30,7 +30,7 @@ export type AuthContextValue = {
   cloudProfile: CloudProfileRecord | null
   localGuestProfile: PlayerProfile | null
   signInWithPassword: (credentials: AuthCredentials) => Promise<AuthActionResult>
-  signInWithGoogle: () => Promise<AuthActionResult>
+  signInWithGoogle: (redirectPath?: string) => Promise<AuthActionResult>
   signOut: () => Promise<AuthActionResult>
   signUp: (credentials: AuthCredentials) => Promise<AuthActionResult>
   completeOnboarding: (payload: OnboardingPayload) => Promise<AuthActionResult>

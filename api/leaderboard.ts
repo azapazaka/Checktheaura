@@ -25,7 +25,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ entries: data ?? [] })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to load leaderboard'
-    return res.status(400).json({ error: message })
+    console.error('Leaderboard API Error:', error)
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as Record<string, unknown>).message)
+          : JSON.stringify(error)
+
+    return res.status(500).json({ error: message })
   }
 }

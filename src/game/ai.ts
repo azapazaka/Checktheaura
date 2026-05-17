@@ -58,6 +58,24 @@ function getSearchDepth(difficulty: Difficulty) {
   return 1
 }
 
+function sortMoves(moves: Move[]) {
+  return [...moves].sort((a, b) => {
+    // 1. Prioritize captures (more captures first)
+    if (b.captured.length !== a.captured.length) {
+      return b.captured.length - a.captured.length
+    }
+    
+    // 2. Prioritize moves that lead to promotion (white to row 0, black to row 7)
+    const aPromotes = a.to.row === 0 || a.to.row === 7
+    const bPromotes = b.to.row === 0 || b.to.row === 7
+    if (aPromotes !== bPromotes) {
+      return bPromotes ? 1 : -1
+    }
+    
+    return 0
+  })
+}
+
 function minimax(
   state: GameState,
   depth: number,
@@ -76,9 +94,11 @@ function minimax(
     return evaluateState(state, maximizingColor)
   }
 
+  const sortedMoves = sortMoves(moves)
+
   if (currentColor === maximizingColor) {
     let best = Number.NEGATIVE_INFINITY
-    for (const move of moves) {
+    for (const move of sortedMoves) {
       best = Math.max(
         best,
         minimax(applyMove(state, move), depth - 1, maximizingColor, alpha, beta),
@@ -93,7 +113,7 @@ function minimax(
   }
 
   let best = Number.POSITIVE_INFINITY
-  for (const move of moves) {
+  for (const move of sortedMoves) {
     best = Math.min(
       best,
       minimax(applyMove(state, move), depth - 1, maximizingColor, alpha, beta),
@@ -122,10 +142,11 @@ export function chooseAiMove(
   }
 
   const depth = getSearchDepth(difficulty)
-  let bestMove = moves[0]
+  const sortedMoves = sortMoves(moves)
+  let bestMove = sortedMoves[0]
   let bestScore = Number.NEGATIVE_INFINITY
 
-  for (const move of moves) {
+  for (const move of sortedMoves) {
     const nextState = applyMove(state, move)
     const score = minimax(
       nextState,

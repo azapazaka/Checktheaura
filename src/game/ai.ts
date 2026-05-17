@@ -16,28 +16,31 @@ function evaluateState(state: GameState, perspective: PieceColor) {
   }
 
   let score = 0
-  for (const piece of state.board.flat()) {
-    if (!piece) {
-      continue
-    }
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const piece = state.board[row][col]
+      if (!piece) {
+        continue
+      }
 
-    // Kings are worth 50 points, normal pieces are worth 30 points
-    const baseValue = piece.kind === 'king' ? 50 : 30
-    
-    // Slight positional bonus: favor pieces closer to promotion and center control
-    let positionalBonus = 0
-    if (piece.kind !== 'king') {
-      const advanceRow = piece.color === 'white' ? (7 - piece.row) : piece.row
-      positionalBonus += advanceRow * 2 // encourages moving forward
-    }
-    
-    // Encourage controlling center columns (columns 2, 3, 4, 5)
-    if (piece.col >= 2 && piece.col <= 5) {
-      positionalBonus += 1
-    }
+      // Kings are worth 50 points, normal pieces are worth 30 points
+      const baseValue = piece.kind === 'king' ? 50 : 30
+      
+      // Slight positional bonus: favor pieces closer to promotion and center control
+      let positionalBonus = 0
+      if (piece.kind !== 'king') {
+        const advanceRow = piece.color === 'white' ? (7 - row) : row
+        positionalBonus += advanceRow * 2 // encourages moving forward
+      }
+      
+      // Encourage controlling center columns (columns 2, 3, 4, 5)
+      if (col >= 2 && col <= 5) {
+        positionalBonus += 1
+      }
 
-    const value = baseValue + positionalBonus
-    score += piece.color === perspective ? value : -value
+      const value = baseValue + positionalBonus
+      score += piece.color === perspective ? value : -value
+    }
   }
 
   return score

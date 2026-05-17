@@ -21,7 +21,7 @@ test('new user goes through class select, dark premium lobby, versus, battle, an
   await expect(page.getByTestId('mode-select-shell')).toBeVisible()
   await page.getByTestId('mode-cta-training').click()
   await expect(page.getByRole('heading', { name: /versus/i })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /battle board/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /боевая доска/i })).toBeVisible()
 
   await page.goto('/profile')
   await expect(page.getByTestId('profile-progression-shell')).toBeVisible()

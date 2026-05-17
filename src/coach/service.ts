@@ -121,6 +121,82 @@ function parseCoachResponse(rawText: string) {
     .parse(JSON.parse(cleaned)) as CoachAnalyzeResponse
 }
 
+async function makeRequest(
+  provider: CoachProvider,
+  apiKey: string,
+  model: string,
+  payload: CoachAnalyzeRequest,
+  fetchImpl: typeof fetch,
+): Promise<CoachAnalyzeResponse> {
+  if (provider === 'groq') {
+    const response = await fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        max_tokens: 500,
+        messages: [
+          {
+            role: 'user',
+            content: buildPrompt(payload),
+          },
+        ],
+        response_format: {
+          type: 'json_object',
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Groq request failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const text = extractGroqTextResponse(data)
+    if (!text) {
+      throw new Error('Groq response missing text')
+    }
+
+    return parseCoachResponse(text)
+  }
+
+  const response = await fetchImpl('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 500,
+      temperature: 0.4,
+      messages: [
+        {
+          role: 'user',
+          content: buildPrompt(payload),
+        },
+      ],
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Anthropic request failed: ${response.status}`)
+  }
+
+  const data = await response.json()
+  const text = extractTextResponse(data)
+  if (!text) {
+    throw new Error('Anthropic response missing text')
+  }
+
+  return parseCoachResponse(text)
+}
+
 export async function analyzeCoachPayload(
   input: unknown,
   options?: {
@@ -134,15 +210,7 @@ export async function analyzeCoachPayload(
   const provider =
     options?.provider ??
     ((process.env.COACH_AI_PROVIDER?.toLowerCase() as CoachProvider | undefined) ??
-      (process.env.GROQ_API_KEY ? 'groq' : 'anthropic'))
-
-  const apiKey =
-    options?.apiKey ??
-    (provider === 'groq' ? process.env.GROQ_API_KEY : process.env.ANTHROPIC_API_KEY)
-
-  if (!apiKey || payload.moves.length === 0) {
-    return buildFallbackCoachAnalysis(payload)
-  }
+      (process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_FALLBACK ? 'groq' : 'anthropic'))
 
   const fetchImpl = options?.fetchImpl ?? fetch
   const model =
@@ -151,75 +219,36 @@ export async function analyzeCoachPayload(
       ? process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile'
       : process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514')
 
-  try {
-    if (provider === 'groq') {
-      const response = await fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          temperature: 0.4,
-          max_tokens: 500,
-          messages: [
-            {
-              role: 'user',
-              content: buildPrompt(payload),
-            },
-          ],
-          response_format: {
-            type: 'json_object',
-          },
-        }),
-      })
+  const primaryApiKey =
+    options?.apiKey ??
+    (provider === 'groq' ? process.env.GROQ_API_KEY : process.env.ANTHROPIC_API_KEY)
 
-      if (!response.ok) {
-        throw new Error(`Groq request failed: ${response.status}`)
-      }
+  const fallbackApiKey =
+    provider === 'groq' && !options?.apiKey ? process.env.GROQ_API_KEY_FALLBACK : undefined
 
-      const data = await response.json()
-      const text = extractGroqTextResponse(data)
-      if (!text) {
-        throw new Error('Groq response missing text')
-      }
-
-      return parseCoachResponse(text)
-    }
-
-    const response = await fetchImpl('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 500,
-        temperature: 0.4,
-        messages: [
-          {
-            role: 'user',
-            content: buildPrompt(payload),
-          },
-        ],
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Anthropic request failed: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const text = extractTextResponse(data)
-    if (!text) {
-      throw new Error('Anthropic response missing text')
-    }
-
-    return parseCoachResponse(text)
-  } catch {
+  if (payload.moves.length === 0) {
     return buildFallbackCoachAnalysis(payload)
   }
+
+  // Attempt with primary API key
+  if (primaryApiKey) {
+    try {
+      return await makeRequest(provider, primaryApiKey, model, payload, fetchImpl)
+    } catch (err) {
+      console.warn(`Primary coach API key failed, checking for fallback...`, err)
+    }
+  }
+
+  // Attempt with fallback API key if primary failed or was missing
+  if (fallbackApiKey) {
+    try {
+      console.log(`Using fallback Groq API key...`)
+      return await makeRequest(provider, fallbackApiKey, model, payload, fetchImpl)
+    } catch (err) {
+      console.error(`Fallback coach API key also failed:`, err)
+    }
+  }
+
+  // Otherwise, return local ruleset fallback build
+  return buildFallbackCoachAnalysis(payload)
 }

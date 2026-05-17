@@ -1,17 +1,31 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const keys = Object.keys(process.env)
-  const status = {
-    SUPABASE_URL: !!process.env.SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    VITE_SUPABASE_URL: !!process.env.VITE_SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY: !!process.env.SUPABASE_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    VITE_SUPABASE_PUBLISHABLE_KEY: !!process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    allKeys: keys.filter(k => !k.includes('KEY') && !k.includes('SECRET') && !k.includes('PASSWORD')),
-  }
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-  return res.status(200).json(status)
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+
+    const { data, error } = await supabase.from('profiles').select('id').limit(1)
+
+    return res.status(200).json({
+      success: true,
+      supabaseUrl,
+      supabaseKeyLength: supabaseKey.length,
+      data,
+      error,
+    })
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
 }

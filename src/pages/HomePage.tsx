@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import brandCrest from '../assets/brand-crest.png'
 import schoolBagIcon from '../assets/lobby-icons/school-bag.png'
 import shoppingCartIcon from '../assets/lobby-icons/shopping-cart.png'
 import trophyStarIcon from '../assets/lobby-icons/trophy-star.png'
@@ -479,10 +480,15 @@ export function HomePage() {
 
       <header className="lobby-room-hud">
         <div className="lobby-room-hud__brand">
-          <span className="lobby-room-hud__eyebrow">Штаб арены</span>
-          <h1 data-testid="app-title" className="lobby-wordmark">
-            CheckTheAura
-          </h1>
+          <div className="lobby-room-hud__brand-lockup">
+            <img src={brandCrest} alt="CheckTheAura crest" className="lobby-brand-crest" />
+            <div>
+              <span className="lobby-room-hud__eyebrow">Штаб арены</span>
+              <h1 data-testid="app-title" className="lobby-wordmark">
+                CheckTheAura
+              </h1>
+            </div>
+          </div>
         </div>
 
         <div className="lobby-room-hud__status">

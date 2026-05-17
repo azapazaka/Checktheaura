@@ -9,6 +9,21 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const toolDir = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(toolDir, '..')
+const devArgs = process.argv.slice(2)
+
+function readCliFlag(flag: string) {
+  const index = devArgs.indexOf(flag)
+  if (index === -1) {
+    return null
+  }
+
+  return devArgs[index + 1] ?? null
+}
+
+const viteHost = readCliFlag('--host') ?? '127.0.0.1'
+const vitePort = readCliFlag('--port') ?? '5173'
+const strictPortEnabled = devArgs.includes('--strictPort')
+const apiPort = process.env.CLOUD_API_PORT?.trim() || '8787'
 
 function loadEnvFromFile(path: string) {
   if (!existsSync(path)) {
@@ -120,15 +135,16 @@ const apiServer = createServer(async (req: IncomingMessage, res: ServerResponse<
   }
 })
 
-apiServer.listen(8787, '127.0.0.1', () => {
-  console.log('Local cloud API listening on http://127.0.0.1:8787')
-})
-
 const viteEntrypoint = resolve(rootDir, 'node_modules', 'vite', 'bin', 'vite.js')
+const viteArgs = [viteEntrypoint, '--host', viteHost, '--port', vitePort]
+
+if (strictPortEnabled) {
+  viteArgs.push('--strictPort')
+}
 
 const vite = spawn(
   process.execPath,
-  [viteEntrypoint, '--host', '127.0.0.1', '--port', '5173'],
+  viteArgs,
   {
     cwd: rootDir,
     stdio: 'inherit',
@@ -136,6 +152,26 @@ const vite = spawn(
     env: process.env,
   },
 )
+
+let ownsApiServer = false
+
+apiServer.once('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.log(`Local cloud API already running on http://${viteHost}:${apiPort}; reusing existing server.`)
+    return
+  }
+
+  console.error(error)
+  if (!vite.killed) {
+    vite.kill('SIGINT')
+  }
+  process.exit(1)
+})
+
+apiServer.listen(Number(apiPort), viteHost, () => {
+  ownsApiServer = true
+  console.log(`Local cloud API listening on http://${viteHost}:${apiPort}`)
+})
 
 let shuttingDown = false
 
@@ -145,7 +181,9 @@ function shutdown(code = 0) {
   }
 
   shuttingDown = true
-  apiServer.close()
+  if (ownsApiServer) {
+    apiServer.close()
+  }
 
   if (!vite.killed) {
     vite.kill('SIGINT')

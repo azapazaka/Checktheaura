@@ -309,6 +309,21 @@ body:has([data-testid='lobby-shell']) {
   gap: 0.35rem;
 }
 
+.lobby-room-hud__brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+}
+
+.lobby-brand-crest {
+  width: 4.3rem;
+  height: 4.3rem;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 20px rgba(255, 203, 118, 0.24))
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.32));
+}
+
 .lobby-room-hud__eyebrow,
 .lobby-room-hud__label,
 .lobby-player-hud__label,
@@ -568,11 +583,11 @@ body:has([data-testid='lobby-shell']) {
   border: 1px solid rgba(255, 206, 128, 0.16);
   border-radius: 2.8rem;
   background:
-    radial-gradient(circle at 50% 18%, rgba(255, 220, 136, 0.12), transparent 20%),
-    radial-gradient(circle at bottom, rgba(255, 143, 72, 0.09), transparent 28%),
-    linear-gradient(180deg, rgba(34, 26, 19, 0.96) 0%, rgba(16, 12, 9, 0.98) 100%);
+    radial-gradient(circle at top right, #3a2510 0%, #1a0a20 60%, #0a0a0f 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -30px 60px -20px rgba(251, 146, 60, 0.2),
+    inset 0 0 100px rgba(34, 211, 238, 0.15),
     inset 0 0 120px rgba(255, 171, 88, 0.05),
     0 28px 70px rgba(0, 0, 0, 0.45);
 }
@@ -583,6 +598,42 @@ body:has([data-testid='lobby-shell']) {
   inset: 1rem;
   border-radius: 2.2rem;
   border: 1px solid rgba(255, 214, 151, 0.06);
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 191, 105, 0.08), transparent 20%),
+    radial-gradient(circle at 76% 68%, rgba(45, 212, 191, 0.1), transparent 24%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.03) 0,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 56px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 0,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 56px
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 229, 0.03),
+    inset 0 -26px 70px -32px rgba(255, 156, 84, 0.2),
+    inset 0 0 90px rgba(41, 214, 236, 0.08);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.lobby-stage-shell::after {
+  content: "";
+  position: absolute;
+  inset: 8% 10% 14%;
+  border-radius: 2.35rem;
+  background:
+    radial-gradient(circle at center, rgba(39, 200, 228, 0.08), transparent 30%),
+    radial-gradient(circle at 50% 92%, rgba(255, 162, 79, 0.16), transparent 24%),
+    linear-gradient(180deg, rgba(255, 246, 225, 0.04), transparent 26%, rgba(0, 0, 0, 0.2) 100%);
+  filter: blur(10px);
+  opacity: 0.9;
   pointer-events: none;
 }
 
@@ -591,7 +642,10 @@ body:has([data-testid='lobby-shell']) {
   left: 50%;
   top: 52%;
   border-radius: 999px;
-  border: 1px solid rgba(255, 211, 131, 0.09);
+  border: 1px solid rgba(123, 214, 244, 0.12);
+  box-shadow:
+    inset 0 0 18px rgba(61, 224, 255, 0.04),
+    0 0 22px rgba(255, 171, 88, 0.05);
   transform: translate(-50%, -50%);
 }
 
@@ -634,13 +688,14 @@ body:has([data-testid='lobby-shell']) {
 .lobby-stage-glow {
   position: absolute;
   left: 50%;
-  bottom: 18%;
+  bottom: 16%;
   z-index: 1;
-  width: 23rem;
-  height: 23rem;
+  width: 25rem;
+  height: 25rem;
   border-radius: 999px;
   background:
-    radial-gradient(circle, rgba(248, 183, 92, 0.28) 0%, rgba(255, 153, 77, 0.08) 42%, transparent 74%);
+    radial-gradient(circle, rgba(255, 171, 88, 0.26) 0%, rgba(255, 153, 77, 0.12) 34%, rgba(39, 200, 228, 0.1) 56%, transparent 78%);
+  mix-blend-mode: screen;
   transform: translateX(-50%);
   animation: lobby-stage-glow 3.6s ease-in-out infinite;
 }
@@ -654,10 +709,11 @@ body:has([data-testid='lobby-shell']) {
   height: 4.3rem;
   border-radius: 999px;
   background:
-    radial-gradient(circle at top, rgba(255, 233, 189, 0.18), transparent 55%),
-    linear-gradient(180deg, rgba(130, 94, 52, 0.9), rgba(57, 38, 23, 0.98));
+    radial-gradient(circle at top, rgba(255, 233, 189, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(98, 79, 61, 0.9), rgba(36, 28, 31, 0.98));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -12px 24px rgba(255, 141, 74, 0.16),
     0 14px 30px rgba(0, 0, 0, 0.36);
   transform: translateX(-50%);
 }
@@ -682,10 +738,11 @@ body:has([data-testid='lobby-shell']) {
   left: 50%;
   bottom: 3.7rem;
   z-index: 1;
-  width: 14rem;
-  height: 1.5rem;
+  width: 15rem;
+  height: 1.7rem;
   border-radius: 999px;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.52) 0%, transparent 70%);
+  background:
+    radial-gradient(ellipse, rgba(15, 11, 14, 0.64) 0%, rgba(34, 211, 238, 0.08) 42%, transparent 74%);
   transform: translateX(-50%);
 }
 
@@ -1374,9 +1431,15 @@ body:has([data-testid='lobby-shell']) {
 
   .lobby-room-hud__status,
   .lobby-player-hud__heading,
+  .lobby-room-hud__brand-lockup,
   .lobby-pro-banner {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .lobby-brand-crest {
+    width: 3.6rem;
+    height: 3.6rem;
   }
 
   .lobby-room-hud__presence {

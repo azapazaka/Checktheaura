@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import brandCrest from '../assets/brand-crest.png'
 import dailyEmeraldCanyonArt from '../assets/daily-emerald-canyon-art.png'
 import duelStormArenaArt from '../assets/duel-storm-arena-art.png'
 import trainingSteppeArt from '../assets/training-steppe-art.png'
@@ -243,16 +244,25 @@ export function ModeSelectPage() {
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-7xl flex-col">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-[0.72rem] font-bold uppercase tracking-[0.34em] text-white/54">
-              Режимы боя
-            </p>
-            <h1 className="mt-4 font-display text-4xl text-white sm:text-5xl lg:text-6xl">
-              Выбери арену
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68 sm:text-base">
-              Один экран, три пути: прокачка против AI, дуэль по комнате и ежедневное особое поле.
-            </p>
+          <div className="flex items-start gap-4">
+            <div className="hidden rounded-[1.9rem] border border-white/12 bg-white/[0.06] p-3 shadow-[0_18px_34px_rgba(0,0,0,0.26)] backdrop-blur-sm sm:block">
+              <img
+                src={brandCrest}
+                alt="CheckTheAura crest"
+                className="h-20 w-20 object-contain drop-shadow-[0_0_22px_rgba(255,210,120,0.28)]"
+              />
+            </div>
+            <div>
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.34em] text-white/54">
+                Режимы боя
+              </p>
+              <h1 className="mt-4 font-display text-4xl text-white sm:text-5xl lg:text-6xl">
+                Выбери арену
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68 sm:text-base">
+                Один экран, три пути: прокачка против AI, дуэль по комнате и ежедневное особое поле.
+              </p>
+            </div>
           </div>
 
           <Link

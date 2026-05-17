@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import brandCrest from '../assets/brand-crest.png'
 
 type AuthMode = 'sign-in' | 'sign-up'
 
@@ -92,6 +93,15 @@ export function AuthPage() {
       className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]"
     >
       <article className="arcade-panel overflow-hidden rounded-[2.6rem] p-6 sm:p-8">
+        <div className="mb-6 flex justify-center lg:justify-start">
+          <div className="rounded-[2rem] border border-amber-200/14 bg-white/[0.06] p-3 shadow-[0_24px_46px_rgba(0,0,0,0.26)] backdrop-blur-sm">
+            <img
+              src={brandCrest}
+              alt="CheckTheAura crest"
+              className="h-24 w-24 object-contain drop-shadow-[0_0_24px_rgba(255,214,132,0.28)]"
+            />
+          </div>
+        </div>
         <p className="arcade-kicker">Supabase Auth</p>
         <h1 className="mt-3 font-display text-4xl text-white sm:text-5xl">
           Сохрани прогресс за настоящим входом игрока

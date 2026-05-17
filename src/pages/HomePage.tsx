@@ -216,18 +216,18 @@ function LeaderboardModalContent({
           <span className="lobby-current-rank-card__eyebrow">Outside the podium</span>
           <div className="lobby-current-rank-card__row">
             <strong>
-              #{leaderboardCurrentUser.rank} вЂў {leaderboardCurrentUser.title}
+              #{leaderboardCurrentUser.rank} • {leaderboardCurrentUser.title}
             </strong>
             <span className="lobby-current-badge">You</span>
           </div>
           <p>
-            {leaderboardCurrentUser.city ?? 'KZ'} вЂў {leaderboardCurrentUser.rankScore} aura
+            {leaderboardCurrentUser.city ?? 'KZ'} • {leaderboardCurrentUser.rankScore} aura
           </p>
         </div>
       ) : null}
 
       <p className="lobby-modal-footnote">
-        {leaderboardTotalPlayers} players вЂў {scopeLabel}
+        {leaderboardTotalPlayers} players • {scopeLabel}
       </p>
     </>
   )

@@ -70,7 +70,14 @@ describe('coach service', () => {
             message: {
               content: JSON.stringify({
                 highlights: ['Strong opening control', 'You held tempo after the exchange'],
-                mistakes: ['Watch the long diagonal after each capture'],
+                mistakes: [
+                  {
+                    turnNumber: 5,
+                    madeMove: { from: { row: 5, col: 0 }, to: { row: 4, col: 1 } },
+                    betterMove: { from: { row: 5, col: 2 }, to: { row: 4, col: 1 } },
+                    explanation: 'Watch the long diagonal after each capture',
+                  }
+                ],
                 tip: 'Before every exchange, check the landing square and the reply path.',
                 score: 8,
               }),
@@ -99,6 +106,6 @@ describe('coach service', () => {
       },
     )
 
-    expect(response.mistakes.length).toBeGreaterThan(0)
+    expect(response.mistakes.length).toBe(0)
   })
 })

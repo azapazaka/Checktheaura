@@ -1,4 +1,4 @@
-import type { CoachAnalyzeRequest, CoachAnalyzeResponse } from './types'
+import type { CoachAnalyzeRequest, CoachAnalyzeResponse, ReplayMistake } from './types'
 
 export function buildFallbackCoachAnalysis(
   payload: CoachAnalyzeRequest,
@@ -21,13 +21,7 @@ export function buildFallbackCoachAnalysis(
       : 'До дамки не дошло, значит стоит раньше готовить проходные диагонали.',
   ]
 
-  const mistakes =
-    payload.result.winner === payload.playerColor
-      ? ['Даже в победной партии можно заранее просчитывать ответ соперника на 1–2 хода глубже.']
-      : [
-          'Соперник перехватил инициативу после размена, где у тебя не осталось безопасного продолжения.',
-          'В критический момент не хватило фигуры для прикрытия обратной диагонали.',
-        ]
+  const mistakes: ReplayMistake[] = []
 
   const score =
     payload.result.winner === payload.playerColor

@@ -26,12 +26,10 @@ describe('application flow', () => {
 
     await user.click(screen.getByTestId('auth-cta'))
 
-    expect(
-      await screen.findByRole('heading', { name: /enter the arena/i }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /enter the arena/i })).toBeInTheDocument()
   })
 
-  test('guides an authenticated user from class selection into the dark premium lobby and battle flow', async () => {
+  test('guides an authenticated user from play mode select into training flow', async () => {
     const user = userEvent.setup()
 
     render(
@@ -48,25 +46,21 @@ describe('application flow', () => {
     expect(screen.getByRole('heading', { name: /checktheaura/i })).toBeInTheDocument()
 
     await user.click(screen.getByTestId('class-select-link'))
-
-    expect(
-      screen.getByRole('heading', { name: /выберите архетип/i }),
-    ).toBeInTheDocument()
+    expect(await screen.findByTestId('class-select-strategist')).toBeInTheDocument()
 
     await user.click(screen.getByTestId('class-select-strategist'))
 
     expect(useProgressStore.getState().profile?.classId).toBe('strategist')
-    expect(screen.getByTestId('lobby-profile-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('lobby-room-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('lobby-player-hud')).toBeInTheDocument()
+    expect(screen.getByTestId('lobby-command-trigger')).toBeInTheDocument()
     expect(screen.getByTestId('battle-cta')).toBeInTheDocument()
+    expect(screen.queryByTestId('lobby-room-hud')).not.toBeInTheDocument()
 
     await user.click(screen.getByTestId('battle-cta'))
+    expect(await screen.findByTestId('mode-select-shell')).toBeInTheDocument()
 
-    expect(
-      await screen.findByRole('heading', { name: /versus/i }),
-    ).toBeInTheDocument()
-    expect(
-      await screen.findByRole('heading', { name: /battle board/i }),
-    ).toBeInTheDocument()
+    await user.click(screen.getByTestId('mode-cta-training'))
+    expect(await screen.findByRole('heading', { name: /versus/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /battle board/i })).toBeInTheDocument()
   })
 })

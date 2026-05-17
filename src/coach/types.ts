@@ -1,4 +1,4 @@
-import type { Difficulty, GameOutcome, MatchMove, PieceColor } from '../game/types'
+import type { BoardCoord, Difficulty, GameOutcome, MatchMove, PieceColor } from '../game/types'
 import type { MatchXpReward } from '../rpg/types'
 
 export type CoachAnalyzeRequest = {
@@ -9,9 +9,16 @@ export type CoachAnalyzeRequest = {
   xpSummary: MatchXpReward
 }
 
+export type ReplayMistake = {
+  turnNumber: number
+  madeMove: { from: BoardCoord; to: BoardCoord }
+  betterMove: { from: BoardCoord; to: BoardCoord }
+  explanation: string
+}
+
 export type CoachAnalyzeResponse = {
   highlights: string[]
-  mistakes: string[]
+  mistakes: ReplayMistake[]
   tip: string
   score: number
 }

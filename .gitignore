@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 .playwright-mcp/
 test-results/
+.vite/
+
+# Design screenshots
+lobby-play-redesign.png
+mode-select-redesign.png
+play-modes-*.png

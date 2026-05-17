@@ -1,14 +1,19 @@
 import { startTransition, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { audioSystem } from '../game/audio'
 import { chooseAiMove } from '../game/ai'
 import {
   applyMove,
+  cloneGameState,
   createInitialGameState,
   getGameOutcome,
   getLegalMoves,
 } from '../game/engine'
 import { summarizeFinishedMatch } from '../game/match'
 import type { BoardCoord, GameState, Move } from '../game/types'
+import { getDailyChallengeById, getTodayDailyChallenge } from '../play/daily-challenges'
+import type { PlayMode } from '../play/types'
 import {
   CLASS_META,
   getBattlePiecePresentation,
@@ -40,10 +45,25 @@ function countPieces(state: GameState, color: 'white' | 'black') {
 
 export function GamePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const profile = useProgressStore((state) => state.profile)
   const difficulty = useProgressStore((state) => state.settings.preferredDifficulty)
   const finishMatch = useProgressStore((state) => state.finishMatch)
-  const [gameState, setGameState] = useState<GameState>(() => createInitialGameState())
+  const requestedMode = searchParams.get('mode')
+  const activeMode: PlayMode = requestedMode === 'daily' ? 'daily' : 'training'
+  const activeDailyChallenge =
+    activeMode === 'daily'
+      ? getDailyChallengeById(searchParams.get('challenge')) ?? getTodayDailyChallenge()
+      : null
+  const effectiveDifficulty = activeDailyChallenge?.difficulty ?? difficulty
+  const initialState = useMemo<GameState>(
+    () =>
+      activeDailyChallenge
+        ? cloneGameState(activeDailyChallenge.initialGameState)
+        : createInitialGameState(),
+    [activeDailyChallenge],
+  )
+  const [gameState, setGameState] = useState<GameState>(() => initialState)
   const [selectedSquare, setSelectedSquare] = useState<BoardCoord | null>(null)
   const [shadowHint, setShadowHint] = useState<Move | null>(null)
   const [shadowHintUsed, setShadowHintUsed] = useState(false)
@@ -66,13 +86,16 @@ export function GamePage() {
   }, [navigate, profile])
 
   const runAiTurn = useEffectEvent(() => {
-    const move = chooseAiMove(gameState, difficulty, 'black')
+    const move = chooseAiMove(gameState, effectiveDifficulty, 'black')
     if (!move) {
       return
     }
 
     setShadowHint(null)
     setGameState((current) => applyMove(current, move))
+    
+    if (move.captured.length > 0) audioSystem.playCapture()
+    else audioSystem.playMove()
   })
 
   useEffect(() => {
@@ -85,7 +108,7 @@ export function GamePage() {
     }, 300)
 
     return () => window.clearTimeout(timeoutId)
-  }, [difficulty, gameOutcome, gameState.currentTurn, profile])
+  }, [effectiveDifficulty, gameOutcome, gameState.currentTurn, profile])
 
   useEffect(() => {
     if (!profile || !gameOutcome || finalizedRef.current) {
@@ -96,7 +119,7 @@ export function GamePage() {
     const summary = summarizeFinishedMatch({
       state: gameState,
       outcome: gameOutcome,
-      difficulty,
+      difficulty: effectiveDifficulty,
       playerClass: profile.classId,
       playerColor: 'white',
       usedShadowHint: shadowHintUsed,
@@ -106,7 +129,15 @@ export function GamePage() {
       finishMatch(summary)
       navigate('/results')
     })
-  }, [difficulty, finishMatch, gameOutcome, gameState, navigate, profile, shadowHintUsed])
+  }, [
+    effectiveDifficulty,
+    finishMatch,
+    gameOutcome,
+    gameState,
+    navigate,
+    profile,
+    shadowHintUsed,
+  ])
 
   const playerHero = profile ? getCurrentHeroArt(profile.classId, profile.level) : null
   const opponentClass = profile ? getOpposingVisibleClass(profile.classId) : 'strategist'
@@ -153,7 +184,7 @@ export function GamePage() {
 
         <div className="mt-4 flex flex-wrap gap-3">
           {[
-            ['Difficulty', difficulty.toUpperCase()],
+            ['Difficulty', effectiveDifficulty.toUpperCase()],
             ['Moves', String(gameState.moves.length)],
             ['Capture Chain', gameState.forcedSequence ? 'Locked' : 'Free'],
             [
@@ -179,7 +210,7 @@ export function GamePage() {
             <div>
               <p className="arcade-kicker">Battle phase</p>
               <h2 data-testid="game-heading" className="mt-2 font-display text-4xl text-white">
-                Battle Board
+                {activeDailyChallenge ? 'Daily Challenge' : 'Battle Board'}
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-white/66">
@@ -220,11 +251,16 @@ export function GamePage() {
                         setShadowHint(null)
                         setGameState((current) => applyMove(current, targetMove))
                         setSelectedSquare(null)
+                        
+                        if (targetMove.captured.length > 0) audioSystem.playCapture()
+                        else if (targetMove.to.row === 0) audioSystem.playPromote()
+                        else audioSystem.playMove()
                         return
                       }
 
                       if (piece?.color === 'white' && canSelect) {
                         setSelectedSquare(coord)
+                        audioSystem.playSelect()
                         return
                       }
 
@@ -250,7 +286,8 @@ export function GamePage() {
                     }}
                   >
                     {presentation && piece ? (
-                      <span
+                      <motion.span
+                        layoutId={piece.id}
                         data-testid={`battle-mini-${piece.id}`}
                         className={[
                           'battle-mini',
@@ -265,7 +302,7 @@ export function GamePage() {
                         {piece.kind === 'king' ? (
                           <span className="battle-mini__crown">K</span>
                         ) : null}
-                      </span>
+                      </motion.span>
                     ) : null}
                   </button>
                 )
@@ -289,6 +326,12 @@ export function GamePage() {
                   ? `Continue from ${gameState.forcedSequence.row}-${gameState.forcedSequence.col}`
                   : 'No chain locked',
               ],
+              ...(activeDailyChallenge
+                ? [
+                    ['Challenge', activeDailyChallenge.title],
+                    ['Reward', `+${activeDailyChallenge.rewardXp} XP`],
+                  ]
+                : []),
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -309,7 +352,11 @@ export function GamePage() {
                     return
                   }
 
-                  const recommendedMove = chooseAiMove(gameState, difficulty, 'white')
+                  const recommendedMove = chooseAiMove(
+                    gameState,
+                    effectiveDifficulty,
+                    'white',
+                  )
                   if (!recommendedMove) {
                     return
                   }
@@ -329,7 +376,7 @@ export function GamePage() {
               type="button"
               onClick={() => {
                 finalizedRef.current = false
-                setGameState(createInitialGameState())
+                setGameState(cloneGameState(initialState))
                 setSelectedSquare(null)
                 setShadowHint(null)
                 setShadowHintUsed(false)

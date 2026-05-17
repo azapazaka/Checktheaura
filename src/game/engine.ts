@@ -212,6 +212,26 @@ export function createInitialGameState(): GameState {
   }
 }
 
+export function cloneGameState(state: GameState): GameState {
+  return {
+    ...state,
+    board: state.board.map((row) =>
+      row.map((piece) => (piece ? { ...piece } : null)),
+    ),
+    pendingPromotion: state.pendingPromotion
+      ? { ...state.pendingPromotion }
+      : null,
+    selectedPiece: state.selectedPiece ? { ...state.selectedPiece } : null,
+    forcedSequence: state.forcedSequence ? { ...state.forcedSequence } : null,
+    moves: state.moves.map((move) => ({
+      ...move,
+      from: { ...move.from },
+      to: { ...move.to },
+      captured: move.captured.map((coord) => ({ ...coord })),
+    })),
+  }
+}
+
 export function getLegalMoves(
   state: GameState,
   color: PieceColor = state.currentTurn,

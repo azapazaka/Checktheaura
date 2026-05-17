@@ -2,11 +2,11 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { fetchLeaderboard } from '../cloud/leaderboard-service'
 import { createInitialProfile } from '../rpg/progression'
 import { useProgressStore } from '../store/progress-store'
 import { AuthTestProvider } from '../test/AuthTestProvider'
 import { createMockUser } from '../test/auth-mocks'
-import { fetchLeaderboard } from '../cloud/leaderboard-service'
 import { HomePage } from './HomePage'
 
 vi.mock('../cloud/leaderboard-service', () => ({
@@ -22,7 +22,7 @@ describe('HomePage', () => {
     mockedFetchLeaderboard.mockReset()
   })
 
-  test('renders the dark premium lobby shell with pinned hud and the 2d hero stage', () => {
+  test('renders the lobby shell without the old room panel', () => {
     useProgressStore.setState({
       ...useProgressStore.getInitialState(),
       profile: createInitialProfile('warrior'),
@@ -42,21 +42,20 @@ describe('HomePage', () => {
     )
 
     expect(screen.getByTestId('lobby-shell')).toBeInTheDocument()
-    expect(screen.getByTestId('lobby-profile-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('lobby-room-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('lobby-stage-shell')).toBeInTheDocument()
+    expect(screen.getByTestId('lobby-hero-stage')).toBeInTheDocument()
     expect(screen.getByTestId('battle-cta')).toBeInTheDocument()
-    expect(screen.queryByText(/session setup/i)).not.toBeInTheDocument()
+    expect(screen.queryByTestId('lobby-room-hud')).not.toBeInTheDocument()
+    expect(screen.queryByText(/room code/i)).not.toBeInTheDocument()
   })
 
-  test('opens leaderboard overlay with top-3 and highlighted current user row', async () => {
+  test('opens leaderboard overlay from the command drawer and highlights the current user', async () => {
     const user = userEvent.setup()
 
     useProgressStore.setState({
       ...useProgressStore.getInitialState(),
       profile: {
         ...createInitialProfile('strategist'),
-        city: 'Актау',
+        city: 'Aktau',
       },
     })
 
@@ -66,7 +65,7 @@ describe('HomePage', () => {
           rank: 1,
           userId: 'a',
           title: 'Khan Prime',
-          city: 'Алматы',
+          city: 'Almaty',
           wins: 20,
           level: 8,
           xp: 500,
@@ -76,7 +75,7 @@ describe('HomePage', () => {
           rank: 2,
           userId: 'b',
           title: 'Nomad Ice',
-          city: 'Астана',
+          city: 'Astana',
           wins: 18,
           level: 7,
           xp: 400,
@@ -86,7 +85,7 @@ describe('HomePage', () => {
           rank: 3,
           userId: 'c',
           title: 'Steppe Fox',
-          city: 'Шымкент',
+          city: 'Shymkent',
           wins: 16,
           level: 7,
           xp: 350,
@@ -96,7 +95,7 @@ describe('HomePage', () => {
           rank: 4,
           userId: 'test-user-id',
           title: 'Test Player',
-          city: 'Актау',
+          city: 'Aktau',
           wins: 12,
           level: 5,
           xp: 250,
@@ -108,7 +107,7 @@ describe('HomePage', () => {
         rank: 4,
         userId: 'test-user-id',
         title: 'Test Player',
-        city: 'Актау',
+        city: 'Aktau',
         wins: 12,
         level: 5,
         xp: 250,
@@ -131,13 +130,16 @@ describe('HomePage', () => {
       </AuthTestProvider>,
     )
 
+    await user.click(screen.getByTestId('lobby-command-trigger'))
+    expect(screen.getByTestId('lobby-command-panel')).toBeInTheDocument()
+
     await user.click(screen.getByLabelText('Open leaderboard'))
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('Kazakhstan Leaderboard')).toBeInTheDocument()
-    expect(screen.getAllByText('Вы').length).toBeGreaterThan(0)
-    expect(screen.getByText(/ваше место/i)).toBeInTheDocument()
-    expect(screen.getByText(/18 игроков/i)).toBeInTheDocument()
+    expect(screen.getByText(/kazakhstan leaderboard/i)).toBeInTheDocument()
+    expect(screen.getAllByText('You').length).toBeGreaterThan(0)
+    expect(screen.getByText(/your standing/i)).toBeInTheDocument()
+    expect(screen.getByText(/18 players/i)).toBeInTheDocument()
   })
 
   test('sends unauthenticated players to auth from the upgrade CTA', async () => {
@@ -159,7 +161,7 @@ describe('HomePage', () => {
     expect(screen.getByText('auth-screen')).toBeInTheDocument()
   })
 
-  test('opens and closes the leaderboard overlay from the left action rail', async () => {
+  test('opens and closes the leaderboard overlay from the command flow', async () => {
     const user = userEvent.setup()
 
     useProgressStore.setState({
@@ -186,6 +188,7 @@ describe('HomePage', () => {
       </AuthTestProvider>,
     )
 
+    await user.click(screen.getByTestId('lobby-command-trigger'))
     await user.click(screen.getByLabelText('Open leaderboard'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
 

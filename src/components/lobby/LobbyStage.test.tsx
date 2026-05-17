@@ -1,22 +1,25 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { LobbyStage } from './LobbyStage'
 import warriorPortrait from '../../assets/heroes/warrior-base-thin.png'
+import { LobbyStage } from './LobbyStage'
 
 describe('LobbyStage', () => {
-  test('renders the 2d hero stage and empty friend slots around the character', () => {
+  test('renders the hero stage with empty ally sockets and arena pills', () => {
     render(
       <LobbyStage
         portraitSrc={warriorPortrait}
         heroLevel={1}
-        roomCode="777BA"
         friendSlots={2}
+        stageLabel="SANCTUM"
       />,
     )
 
     expect(screen.getByTestId('lobby-stage-shell')).toBeInTheDocument()
     expect(screen.getByTestId('lobby-friend-slot-left')).toBeInTheDocument()
     expect(screen.getByTestId('lobby-friend-slot-right')).toBeInTheDocument()
-    expect(screen.getByAltText(/центральный батыр/i)).toBeInTheDocument()
+    expect(screen.getByText(/SANCTUM/i)).toBeInTheDocument()
+    expect(screen.getByText(/ALLY SLOTS 2/i)).toBeInTheDocument()
+    expect(screen.queryByText(/ROOM/i)).not.toBeInTheDocument()
+    expect(screen.getByAltText(/central batyr hero/i)).toBeInTheDocument()
   })
 })

@@ -43,8 +43,13 @@ export const coachAnalyzeRequestSchema = z.object({
 
 function buildPrompt(payload: CoachAnalyzeRequest) {
   return [
-    'Ты тренер по шашкам. Верни только JSON с ключами highlights, mistakes, tip, score.',
-    'highlights — массив из 2 строк, mistakes — массив из 1-2 строк, tip — одна практическая рекомендация, score — число от 1 до 10.',
+    'Ты тренер по шашкам. Верни только строгий JSON с ключами highlights, mistakes, tip, score.',
+    'highlights — массив из 2 строк, tip — одна практическая рекомендация, score — число от 1 до 10.',
+    'mistakes — массив объектов (может быть пустым, если ошибок нет). Каждый объект должен иметь:',
+    '  - turnNumber: номер хода из лога, где была совершена ошибка',
+    '  - madeMove: { from: { row, col }, to: { row, col } } — какой ход сделал игрок',
+    '  - betterMove: { from: { row, col }, to: { row, col } } — какой ход был бы лучше',
+    '  - explanation: почему это ошибка (на русском)',
     `Игрок: ${payload.playerColor}`,
     `Сложность: ${payload.difficulty}`,
     `Итог: winner=${payload.result.winner ?? 'draw'}, reason=${payload.result.reason}`,
@@ -98,7 +103,18 @@ function parseCoachResponse(rawText: string) {
   return z
     .object({
       highlights: z.array(z.string()).min(1),
-      mistakes: z.array(z.string()).min(1),
+      mistakes: z.array(z.object({
+        turnNumber: z.number(),
+        madeMove: z.object({
+          from: z.object({ row: z.number(), col: z.number() }),
+          to: z.object({ row: z.number(), col: z.number() }),
+        }),
+        betterMove: z.object({
+          from: z.object({ row: z.number(), col: z.number() }),
+          to: z.object({ row: z.number(), col: z.number() }),
+        }),
+        explanation: z.string()
+      })),
       tip: z.string(),
       score: z.number(),
     })

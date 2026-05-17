@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { buildFallbackCoachAnalysis } from '../coach/fallback'
 import type { CoachAnalyzeResponse } from '../coach/types'
 import { persistCloudMatch, persistCoachAnalysis } from '../cloud/match-service'
+import { MatchReplay } from '../components/game/MatchReplay'
 import {
   CLASS_META,
   DAILY_QUEST_LABELS,
@@ -249,10 +250,10 @@ export function ResultsPage() {
   if (!lastResult || !profile) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
-        <h2 className="font-display text-4xl text-white">РџРѕРєР° РЅРµС‚ Р·Р°РІРµСЂС€РµРЅРЅРѕР№ РїР°СЂС‚РёРё</h2>
+        <h2 className="font-display text-4xl text-white">Пока нет завершенной партии</h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
-          РљРѕРіРґР° Р·Р°РєРѕРЅС‡РёС€СЊ РјР°С‚С‡, Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ XP-СЃРІРѕРґРєР°, СЃРІРµР¶РёРµ РѕС‚РєСЂС‹С‚РёСЏ Рё
-          С‡РµСЃС‚РЅС‹Р№ СЂР°Р·Р±РѕСЂ РѕС‚ AI Coach.
+          Когда закончишь матч, здесь появятся XP-сводка, свежие открытия и
+          честный разбор от AI Coach.
         </p>
       </section>
     )
@@ -472,17 +473,15 @@ export function ResultsPage() {
             </div>
 
             <div>
-              <h3 className="font-display text-3xl text-white">Что улучшить</h3>
-              <ul className="mt-4 space-y-3 text-sm leading-6 text-white/72">
-                {analysis.mistakes.map((item) => (
-                  <li
-                    key={item}
-                    className="rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              <h3 className="font-display text-3xl text-white">Визуальный разбор ошибок</h3>
+              <p className="mt-2 text-sm text-white/60 mb-4">Интерактивный плеер для просмотра лучших ходов по мнению тренера.</p>
+              <div className="rounded-[1.5rem] border border-white/12 bg-black/40 p-4 sm:p-6 flex justify-center">
+                <MatchReplay
+                  moveLog={lastResult.moves}
+                  mistakes={analysis.mistakes}
+                  playerClass={profile.classId}
+                />
+              </div>
             </div>
 
             <div className="rounded-[1.8rem] bg-[linear-gradient(135deg,#2f80ed,#56ccf2)] px-5 py-5 text-slate-950">

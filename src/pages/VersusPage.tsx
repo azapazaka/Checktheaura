@@ -20,7 +20,7 @@ export function VersusPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      navigate('/game', { replace: true })
+      navigate('/game?mode=training', { replace: true })
     }, 700)
 
     return () => window.clearTimeout(timeoutId)

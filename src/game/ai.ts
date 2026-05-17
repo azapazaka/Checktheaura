@@ -21,18 +21,26 @@ function evaluateState(state: GameState, perspective: PieceColor) {
       continue
     }
 
-    const value = piece.kind === 'king' ? 5 : 3
+    // Kings are worth 50 points, normal pieces are worth 30 points
+    const baseValue = piece.kind === 'king' ? 50 : 30
+    
+    // Slight positional bonus: favor pieces closer to promotion and center control
+    let positionalBonus = 0
+    if (piece.kind !== 'king') {
+      const advanceRow = piece.color === 'white' ? (7 - piece.row) : piece.row
+      positionalBonus += advanceRow * 2 // encourages moving forward
+    }
+    
+    // Encourage controlling center columns (columns 2, 3, 4, 5)
+    if (piece.col >= 2 && piece.col <= 5) {
+      positionalBonus += 1
+    }
+
+    const value = baseValue + positionalBonus
     score += piece.color === perspective ? value : -value
   }
 
-  const mobility =
-    getLegalMoves(state, perspective).length -
-    getLegalMoves(
-      { ...state, currentTurn: perspective === 'white' ? 'black' : 'white' },
-      perspective === 'white' ? 'black' : 'white',
-    ).length
-
-  return score * 10 + mobility
+  return score
 }
 
 function getSearchDepth(difficulty: Difficulty) {

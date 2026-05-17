@@ -168,7 +168,7 @@ function LeaderboardModalContent({
             </span>
             <span className="lobby-podium-card__rank">#{entry.rank}</span>
             <strong>{entry.title}</strong>
-            <span>{entry.city ?? 'KZ'} вЂў {entry.rankScore} aura</span>
+            <span>{entry.city ?? 'KZ'} • {entry.rankScore} aura</span>
             {entry.isCurrentUser ? <span className="lobby-current-badge">You</span> : null}
           </article>
         ))}
@@ -179,12 +179,12 @@ function LeaderboardModalContent({
           <span className="lobby-current-rank-card__eyebrow">Your standing</span>
           <div className="lobby-current-rank-card__row">
             <strong>
-              #{leaderboardCurrentUser.rank} вЂў {leaderboardCurrentUser.title}
+              #{leaderboardCurrentUser.rank} • {leaderboardCurrentUser.title}
             </strong>
             <span className="lobby-current-badge">You</span>
           </div>
           <p>
-            {leaderboardCurrentUser.city ?? 'KZ'} вЂў {leaderboardCurrentUser.rankScore} aura
+            {leaderboardCurrentUser.city ?? 'KZ'} • {leaderboardCurrentUser.rankScore} aura
           </p>
         </div>
       ) : null}

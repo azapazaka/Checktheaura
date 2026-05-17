@@ -1,4 +1,11 @@
-import { startTransition, useCallback, useEffect, useState, type PropsWithChildren } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PropsWithChildren,
+} from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import {
   AuthContext,
@@ -40,6 +47,14 @@ function getMissingConfigResult(): AuthActionResult {
   }
 }
 
+function clearHydratedCloudState() {
+  useProgressStore.setState((state) => ({
+    ...state,
+    profile: null,
+    lastResult: null,
+  }))
+}
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const supabase = getSupabaseBrowserClient()
   const isConfigured = supabase !== null
@@ -54,6 +69,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [sessionMode, setSessionMode] = useState<
     'guest' | 'authenticated' | 'upgrading' | 'onboarding'
   >('guest')
+  const lastSessionUserIdRef = useRef<string | null>(null)
 
   const refreshCloudProfile = useCallback(async () => {
     if (!supabase) {
@@ -65,6 +81,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } = await supabase.auth.getUser()
 
     if (!authUser) {
+      clearHydratedCloudState()
       startTransition(() => {
         setCloudProfile(null)
         setSessionMode('guest')
@@ -128,7 +145,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
         return
       }
 
-      syncProgressOwner(nextSession?.user.id ?? null)
+      const nextUserId = nextSession?.user.id ?? null
+      const currentProfile = useProgressStore.getState().profile
+      const currentProfileUserId = currentProfile?.authUserId ?? null
+
+      if (
+        currentProfileUserId &&
+        currentProfileUserId !== nextUserId &&
+        lastSessionUserIdRef.current !== nextUserId
+      ) {
+        clearHydratedCloudState()
+      }
+
+      lastSessionUserIdRef.current = nextUserId
+      syncProgressOwner(nextUserId)
 
       startTransition(() => {
         setSession(nextSession)
@@ -136,6 +166,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       })
 
       if (!nextSession?.user) {
+        clearHydratedCloudState()
         startTransition(() => {
           setCloudProfile(null)
           setSessionMode('guest')
@@ -204,6 +235,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
         provider: 'google',
         options: {
           redirectTo,
+          queryParams: {
+            prompt: 'select_account',
+          },
         },
       })
 

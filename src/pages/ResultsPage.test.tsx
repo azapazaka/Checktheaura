@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { ResultsPage } from './ResultsPage'
@@ -13,7 +13,7 @@ describe('ResultsPage', () => {
     vi.restoreAllMocks()
   })
 
-  test('shows progress, unlocks, quest rewards, and fallback coach badge', async () => {
+  test('shows progress, unlocks, quest rewards, and coach section', () => {
     const profile: PlayerProfile = {
       ...createInitialProfile('shadow'),
       xp: 620,
@@ -69,10 +69,7 @@ describe('ResultsPage', () => {
       },
     })
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValue(new Error('offline')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
 
     render(
       <MemoryRouter>
@@ -80,15 +77,15 @@ describe('ResultsPage', () => {
       </MemoryRouter>,
     )
 
-    await waitFor(() =>
-      expect(screen.getByText(/резервный coach/i)).toBeInTheDocument(),
-    )
-
     expect(screen.getByText(/прогресс до следующего уровня/i)).toBeInTheDocument()
     expect(screen.getByText(/новые разблокировки/i)).toBeInTheDocument()
     expect(screen.getByText(/medium ai/i)).toBeInTheDocument()
     expect(screen.getByText(/dark theme/i)).toBeInTheDocument()
     expect(screen.getByText(/\+100 xp/i)).toBeInTheDocument()
-    expect(screen.getByText(/матч сыгран с подсказкой shadow/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/матч сыгран с подсказкой shadow/i),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/ai coach/i)).toBeInTheDocument()
+    expect(screen.getByText(/разбор партии/i)).toBeInTheDocument()
   })
 })

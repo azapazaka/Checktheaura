@@ -22,6 +22,7 @@ function countPieces(room: RoomRecord, color: PieceColor) {
 
 export function RoomPage() {
   const { roomCode = '' } = useParams()
+  const normalizedRoomCode = roomCode.trim().toUpperCase()
   const { user } = useAuth()
   const profile = useProgressStore((state) => state.profile)
   const [room, setRoom] = useState<RoomRecord | null>(null)
@@ -31,7 +32,7 @@ export function RoomPage() {
   const [isSubmittingMove, setIsSubmittingMove] = useState(false)
 
   useEffect(() => {
-    if (!user || !roomCode) {
+    if (!user || !normalizedRoomCode) {
       return
     }
 
@@ -39,18 +40,19 @@ export function RoomPage() {
 
     const load = async () => {
       try {
-        let nextRoom = await fetchRoom(roomCode)
+        let nextRoom = await fetchRoom(normalizedRoomCode)
 
         if (!nextRoom) {
-          throw new Error('Комната не найдена.')
-        }
-
-        const isMember =
-          nextRoom.host_user_id === user.id || nextRoom.guest_user_id === user.id
-
-        if (!isMember) {
-          const joinResult = await joinRoom(roomCode)
+          const joinResult = await joinRoom(normalizedRoomCode)
           nextRoom = joinResult.room
+        } else {
+          const isMember =
+            nextRoom.host_user_id === user.id || nextRoom.guest_user_id === user.id
+
+          if (!isMember) {
+            const joinResult = await joinRoom(normalizedRoomCode)
+            nextRoom = joinResult.room
+          }
         }
 
         if (isMounted) {
@@ -72,7 +74,7 @@ export function RoomPage() {
 
     void load()
 
-    const channel = subscribeToRoom(roomCode, (nextRoom) => {
+    const channel = subscribeToRoom(normalizedRoomCode, (nextRoom) => {
       if (isMounted) {
         setRoom(nextRoom)
       }
@@ -82,7 +84,7 @@ export function RoomPage() {
       isMounted = false
       unsubscribeFromRoom(channel)
     }
-  }, [roomCode, user])
+  }, [normalizedRoomCode, user])
 
   const currentPlayerColor =
     room && user ? roomPlayerColor(room, user.id) : null
@@ -98,8 +100,8 @@ export function RoomPage() {
       return ''
     }
 
-    return `${window.location.origin}/rooms/${roomCode}`
-  }, [roomCode])
+    return `${window.location.origin}/rooms/${normalizedRoomCode}`
+  }, [normalizedRoomCode])
 
   if (isLoading) {
     return null

@@ -36,7 +36,7 @@ function TrainingVisual({ portraitSrc }: { portraitSrc: string }) {
       <div className="relative h-[8.5rem] w-[8.5rem] rounded-[2rem] border border-white/10 bg-black/18 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
         <img
           src={portraitSrc}
-          alt="Training mode hero"
+          alt="Герой режима тренировки"
           className="h-full w-full object-contain drop-shadow-[0_18px_24px_rgba(0,0,0,0.3)]"
         />
       </div>
@@ -55,13 +55,13 @@ function FriendVisual({
     <ModeOrb tone="friend">
       <div className="relative flex items-center gap-4">
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-[1.6rem] border border-emerald-200/20 bg-black/18 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.28)]">
-          <img src={hostAvatar} alt="Host avatar" className="h-full w-full object-contain" />
+          <img src={hostAvatar} alt="Аватар хозяина комнаты" className="h-full w-full object-contain" />
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-full border border-white/12 bg-white/8 text-xs font-black uppercase tracking-[0.24em] text-white/74">
           VS
         </div>
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-[1.6rem] border border-cyan-200/20 bg-black/18 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.28)]">
-          <img src={rivalAvatar} alt="Rival avatar" className="h-full w-full object-contain" />
+          <img src={rivalAvatar} alt="Аватар соперника" className="h-full w-full object-contain" />
         </div>
       </div>
     </ModeOrb>
@@ -75,10 +75,10 @@ function DailyVisual({ rewardXp }: { rewardXp: number }) {
         <div className="absolute inset-5 rounded-[1.5rem] border border-fuchsia-200/20 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_45%)]" />
         <div className="relative z-10 text-center">
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-amber-200/24 bg-amber-300/16 text-lg text-amber-100">
-            ✦
+            +
           </div>
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.28em] text-white/56">
-            Today only
+            Сегодня
           </p>
           <p className="mt-2 text-2xl font-black text-white">+{rewardXp}</p>
         </div>
@@ -160,14 +160,14 @@ export function ModeSelectPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[0.72rem] font-bold uppercase tracking-[0.34em] text-white/54">
-              Play modes
+              Режимы боя
             </p>
             <h1 className="mt-4 font-display text-4xl text-white sm:text-5xl lg:text-6xl">
               Выбери арену
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68 sm:text-base">
-              Один экран, три пути: прокачка против AI, дуэль по комнате и
-              ежедневное особое поле.
+              Один экран, три пути: прокачка против AI, дуэль по комнате и ежедневное
+              особое поле.
             </p>
           </div>
 
@@ -175,16 +175,16 @@ export function ModeSelectPage() {
             to="/"
             className="rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/14"
           >
-            Back to lobby
+            Назад в лобби
           </Link>
         </div>
 
         <div className="mt-8 grid flex-1 gap-5 xl:grid-cols-[1.02fr_0.96fr_0.92fr]">
           <ModeCard
             testId="mode-card-training"
-            eyebrow="Core mode"
+            eyebrow="Основной режим"
             title="Тренировка"
-            line="AI battle, XP и честный Coach."
+            line="Бой против AI, XP и честный Coach."
             detail="Главный путь для роста героя, ежедневных квестов и тактического ритма."
             accentClass="bg-[linear-gradient(180deg,rgba(82,48,12,0.84),rgba(28,21,17,0.96))]"
             ctaLabel={profile ? 'Начать бой' : 'Выбрать класс'}
@@ -194,12 +194,12 @@ export function ModeSelectPage() {
 
           <ModeCard
             testId="mode-card-friend"
-            eyebrow={isAuthenticated ? 'Social duel' : 'Cloud mode'}
+            eyebrow={isAuthenticated ? 'Сетевая дуэль' : 'Облачный режим'}
             title="Дуэль с другом"
             line="Комната, код и живая партия 1v1."
-            detail="Создай room, отправь invite и играй в real-time без шума на главном лобби."
+            detail="Создай комнату, отправь приглашение и играй в реальном времени без шума на главном лобби."
             accentClass="bg-[linear-gradient(180deg,rgba(8,48,46,0.9),rgba(17,24,32,0.96))]"
-            ctaLabel={isAuthenticated ? 'Открыть room' : 'Войти в облако'}
+            ctaLabel={isAuthenticated ? 'Открыть комнату' : 'Войти в облако'}
             onClick={() => navigate(isAuthenticated ? '/play/friend' : '/auth?next=/play/friend')}
             visual={
               <FriendVisual hostAvatar={hero.avatar} rivalAvatar={rivalHero.fullAvatar} />
@@ -208,12 +208,12 @@ export function ModeSelectPage() {
 
           <ModeCard
             testId="mode-card-daily"
-            eyebrow="Limited run"
+            eyebrow="Ограниченный забег"
             title="Испытание дня"
             line={dailyChallenge.title}
             detail={`${dailyChallenge.goal} • ${dailyChallenge.difficulty.toUpperCase()} AI.`}
             accentClass="bg-[linear-gradient(180deg,rgba(46,23,77,0.92),rgba(18,18,34,0.96))]"
-            ctaLabel={profile ? 'Открыть challenge' : 'Выбрать класс'}
+            ctaLabel={profile ? 'Открыть испытание' : 'Выбрать класс'}
             onClick={() => navigate(profile ? '/play/daily' : '/class-select')}
             visual={<DailyVisual rewardXp={dailyChallenge.rewardXp} />}
           />

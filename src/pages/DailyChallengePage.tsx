@@ -29,14 +29,14 @@ export function DailyChallengePage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[0.72rem] font-bold uppercase tracking-[0.34em] text-white/54">
-              Daily challenge
+              Испытание дня
             </p>
             <h1 className="mt-4 font-display text-4xl text-white sm:text-5xl">
               Испытание дня
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68 sm:text-base">
-              Один special board в день: короткий риск, редкая позиция и быстрый
-              повод вернуться завтра.
+              Одна особая доска в день: короткий риск, редкая позиция и быстрый повод
+              вернуться завтра.
             </p>
           </div>
 
@@ -44,7 +44,7 @@ export function DailyChallengePage() {
             to="/play"
             className="rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/14"
           >
-            Back to modes
+            Назад к режимам
           </Link>
         </div>
 
@@ -57,7 +57,7 @@ export function DailyChallengePage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[0.72rem] font-bold uppercase tracking-[0.28em] text-white/50">
-                    Today only
+                    Только сегодня
                   </p>
                   <h2 className="mt-3 font-display text-3xl text-white">{challenge.title}</h2>
                   <p className="mt-3 max-w-xl text-sm leading-7 text-white/66">
@@ -67,7 +67,7 @@ export function DailyChallengePage() {
                 <div className="grid h-[4.5rem] w-[4.5rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/8">
                   <img
                     src={hero.avatar}
-                    alt="Challenge hero avatar"
+                    alt="Аватар героя испытания"
                     className="h-14 w-14 object-contain"
                   />
                 </div>
@@ -75,15 +75,15 @@ export function DailyChallengePage() {
 
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/48">Goal</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-white/48">Цель</p>
                   <p className="mt-2 text-sm font-semibold text-white/88">{challenge.goal}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/48">Reward</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-white/48">Награда</p>
                   <p className="mt-2 text-lg font-black text-white">+{challenge.rewardXp} XP</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/48">Enemy AI</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-white/48">Вражеский AI</p>
                   <p className="mt-2 text-lg font-black text-white">
                     {challenge.difficulty.toUpperCase()}
                   </p>
@@ -94,13 +94,13 @@ export function DailyChallengePage() {
 
           <article className="rounded-[2.6rem] border border-white/12 bg-[linear-gradient(180deg,rgba(18,18,30,0.9),rgba(8,9,16,0.96))] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.34)] sm:p-8">
             <p className="text-[0.72rem] font-bold uppercase tracking-[0.28em] text-white/50">
-              Board read
+              Чтение позиции
             </p>
             <div className="mt-5 grid gap-3">
               {[
-                ['White side', `${whiteUnits} units`],
-                ['Black side', `${blackUnits} units`],
-                ['Opening turn', challenge.initialGameState.currentTurn],
+                ['Белая сторона', `${whiteUnits} фигур`],
+                ['Чёрная сторона', `${blackUnits} фигур`],
+                ['Первый ход', challenge.initialGameState.currentTurn],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -113,9 +113,8 @@ export function DailyChallengePage() {
             </div>
 
             <div className="mt-6 rounded-[1.8rem] border border-amber-200/14 bg-amber-300/8 px-4 py-4 text-sm leading-7 text-white/70">
-              Этот режим стартует не с обычной доски, а с заранее собранной боевой
-              позиции. Правила и AI остаются прежними, меняется только входная
-              сцена матча.
+              Этот режим стартует не с обычной доски, а с заранее собранной боевой позиции.
+              Правила и AI остаются прежними, меняется только входная сцена матча.
             </div>
 
             <button
@@ -126,7 +125,7 @@ export function DailyChallengePage() {
               }
               className="mt-6 inline-flex rounded-[1.5rem] bg-[linear-gradient(135deg,#c084fc,#f59e0b)] px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-slate-950"
             >
-              {profile ? 'Войти в challenge' : 'Выбрать класс'}
+              {profile ? 'Войти в испытание' : 'Выбрать класс'}
             </button>
           </article>
         </div>

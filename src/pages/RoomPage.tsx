@@ -42,7 +42,7 @@ export function RoomPage() {
         let nextRoom = await fetchRoom(roomCode)
 
         if (!nextRoom) {
-          throw new Error('Room not found.')
+          throw new Error('Комната не найдена.')
         }
 
         const isMember =
@@ -60,7 +60,7 @@ export function RoomPage() {
       } catch (error) {
         if (isMounted) {
           setErrorMessage(
-            error instanceof Error ? error.message : 'Failed to load room.',
+            error instanceof Error ? error.message : 'Не удалось загрузить комнату.',
           )
         }
       } finally {
@@ -112,22 +112,22 @@ export function RoomPage() {
   if (errorMessage || !room || !currentPlayerColor) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
-        <h2 className="font-display text-4xl text-white">Room unavailable</h2>
-        <p className="mt-4 text-white/72">{errorMessage ?? 'This room could not be loaded.'}</p>
+        <h2 className="font-display text-4xl text-white">Комната недоступна</h2>
+        <p className="mt-4 text-white/72">{errorMessage ?? 'Эту комнату не удалось загрузить.'}</p>
       </section>
     )
   }
 
-  const playerLabel = currentPlayerColor === 'white' ? 'Host / White' : 'Guest / Black'
+  const playerLabel = currentPlayerColor === 'white' ? 'Хост / Белые' : 'Гость / Чёрные'
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="arcade-panel overflow-hidden rounded-[2.5rem] p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="arcade-kicker">Friend room</p>
+            <p className="arcade-kicker">Комната друзей</p>
             <h1 className="mt-3 font-display text-4xl text-white sm:text-5xl">
-              Room {room.room_code}
+              Комната {room.room_code}
             </h1>
             <p className="mt-3 text-sm text-white/68">{playerLabel}</p>
           </div>
@@ -141,31 +141,32 @@ export function RoomPage() {
               }}
               className="rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-white/84"
             >
-              Copy invite
+              Копировать приглашение
             </button>
             <Link
               to="/"
               className="rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-white/84"
             >
-              Lobby
+              Лобби
             </Link>
           </div>
         </div>
 
         {room.status === 'waiting' || !room.guest_user_id ? (
           <div className="mt-8 rounded-[2rem] border border-dashed border-white/18 bg-white/6 px-6 py-10 text-center">
-            <p className="text-xs uppercase tracking-[0.24em] text-white/58">Waiting for friend</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-white/58">Ждём друга</p>
             <p className="mt-4 text-lg text-white/82">
-              Share code <strong className="text-white">{room.room_code}</strong> or send the room link.
+              Поделись кодом <strong className="text-white">{room.room_code}</strong> или
+              отправь ссылку на комнату.
             </p>
           </div>
         ) : (
           <>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {[
-                ['Current turn', room.game_state.currentTurn === currentPlayerColor ? 'Your turn' : 'Enemy turn'],
-                ['Your units', String(currentPlayerColor === 'white' ? whiteUnits : blackUnits)],
-                ['Enemy units', String(currentPlayerColor === 'white' ? blackUnits : whiteUnits)],
+                ['Текущий ход', room.game_state.currentTurn === currentPlayerColor ? 'Твой ход' : 'Ход врага'],
+                ['Твои фигуры', String(currentPlayerColor === 'white' ? whiteUnits : blackUnits)],
+                ['Фигуры врага', String(currentPlayerColor === 'white' ? blackUnits : whiteUnits)],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.22em] text-white/58">{label}</p>
@@ -205,7 +206,7 @@ export function RoomPage() {
                               setSelectedSquare(null)
                             } catch (error) {
                               setErrorMessage(
-                                error instanceof Error ? error.message : 'Move failed.',
+                                error instanceof Error ? error.message : 'Ход не прошёл.',
                               )
                             } finally {
                               setIsSubmittingMove(false)
@@ -260,7 +261,7 @@ export function RoomPage() {
 
             {outcome ? (
               <div className="mt-5 rounded-[1.8rem] border border-amber-300/20 bg-amber-400/10 px-5 py-4 text-sm text-white/84">
-                Match completed. Winner: {outcome.winner ?? 'draw'}.
+                Матч завершён. Победитель: {outcome.winner ?? 'ничья'}.
               </div>
             ) : null}
           </>
@@ -269,12 +270,12 @@ export function RoomPage() {
 
       <aside className="grid gap-5">
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h2 className="font-display text-3xl text-white">Room State</h2>
+          <h2 className="font-display text-3xl text-white">Состояние комнаты</h2>
           <div className="mt-5 space-y-3">
             {[
-              ['Status', room.status],
-              ['Move count', String(room.game_state.moves.length)],
-              ['Current turn', room.game_state.currentTurn],
+              ['Статус', room.status],
+              ['Счётчик ходов', String(room.game_state.moves.length)],
+              ['Текущий ход', room.game_state.currentTurn],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/58">{label}</p>

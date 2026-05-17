@@ -46,7 +46,7 @@ describe('ProfilePage', () => {
     render(<ProfilePage />)
 
     expect(screen.getByTestId('profile-progression-shell')).toBeInTheDocument()
-    expect(screen.getByText(/develop your hero/i)).toBeInTheDocument()
+    expect(screen.getByText(/развивай героя/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /\+1/i })).not.toBeInTheDocument()
     expect(screen.getByText(/сыграй 1 матч/i)).toBeInTheDocument()
     expect(screen.getByText(/победи на medium или выше/i)).toBeInTheDocument()
@@ -57,7 +57,7 @@ describe('ProfilePage', () => {
       ...useProgressStore.getInitialState(),
       profile: {
         ...createInitialProfile('warrior'),
-        city: 'Актау',
+        city: 'Aktau',
       },
     })
 
@@ -69,7 +69,7 @@ describe('ProfilePage', () => {
           rank: 12,
           userId: 'test-user-id',
           title: 'Test Player',
-          city: 'Актау',
+          city: 'Aktau',
           wins: 6,
           level: 3,
           xp: 140,
@@ -84,7 +84,7 @@ describe('ProfilePage', () => {
           rank: 3,
           userId: 'test-user-id',
           title: 'Test Player',
-          city: 'Актау',
+          city: 'Aktau',
           wins: 6,
           level: 3,
           xp: 140,

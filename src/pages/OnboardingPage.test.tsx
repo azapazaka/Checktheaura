@@ -14,7 +14,7 @@ describe('OnboardingPage', () => {
     useProgressStore.setState(useProgressStore.getInitialState(), true)
   })
 
-  test('keeps onboarding flow but uses shorter product-oriented copy', async () => {
+  test('keeps onboarding flow with Russian lobby copy', async () => {
     const user = userEvent.setup()
     const completeOnboarding = vi.fn().mockResolvedValue({ error: null })
 
@@ -26,7 +26,7 @@ describe('OnboardingPage', () => {
           sessionMode: 'onboarding',
           localGuestProfile: {
             ...createInitialProfile('strategist'),
-            city: 'Актау',
+            city: 'Aktau',
           },
           completeOnboarding,
         }}
@@ -48,7 +48,7 @@ describe('OnboardingPage', () => {
 
     expect(completeOnboarding).toHaveBeenCalledWith({
       classId: 'warrior',
-      city: 'Актау',
+      city: 'Aktau',
       importGuestProgress: false,
     })
   })

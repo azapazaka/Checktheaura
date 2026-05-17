@@ -100,18 +100,6 @@ export function ResultsPage() {
     }
   }, [lastResult])
 
-  /* if (!lastResult || !profile) {
-    return (
-      <section className="arcade-panel rounded-[2.5rem] p-8">
-        <h2 className="font-display text-4xl text-white">Пока нет завершенной партии</h2>
-        <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
-          Когда закончишь матч, здесь появятся XP-сводка, свежие открытия и
-          честный разбор от AI Coach.
-        </p>
-      </section>
-    )
-  } */
-
   const analysis =
     lastResult && analysisState?.matchId === lastResult.id
       ? analysisState.payload
@@ -161,7 +149,7 @@ export function ResultsPage() {
       } catch (error) {
         if (!cancelled) {
           setCloudSaveError(
-            error instanceof Error ? error.message : 'Failed to save match.',
+            error instanceof Error ? error.message : 'Не удалось сохранить матч.',
           )
           setCloudSaveStatus('failed')
         }
@@ -225,7 +213,7 @@ export function ResultsPage() {
           setCloudSaveError(
             error instanceof Error
               ? error.message
-              : 'Failed to save coach analysis.',
+              : 'Не удалось сохранить разбор Coach.',
           )
           setCloudSaveStatus('failed')
         }
@@ -250,10 +238,10 @@ export function ResultsPage() {
   if (!lastResult || !profile) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
-        <h2 className="font-display text-4xl text-white">Пока нет завершенной партии</h2>
+        <h2 className="font-display text-4xl text-white">Пока нет завершённой партии</h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
-          Когда закончишь матч, здесь появятся XP-сводка, свежие открытия и
-          честный разбор от AI Coach.
+          Когда закончишь матч, здесь появятся XP-сводка, свежие открытия и честный
+          разбор от AI Coach.
         </p>
       </section>
     )
@@ -275,7 +263,7 @@ export function ResultsPage() {
       <section className="arcade-panel overflow-hidden rounded-[2.5rem] p-6 sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="arcade-kicker">Match complete</p>
+            <p className="arcade-kicker">Матч завершён</p>
             <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
               {lastResult.outcome === 'win'
                 ? 'Победа'
@@ -284,12 +272,12 @@ export function ResultsPage() {
                   : 'Поражение'}
             </h2>
             <p className="mt-3 max-w-xl text-base leading-7 text-white/72">
-              Матч завершен, герой получил опыт, а progression честно отражает
-              и XP, и дневные награды, и свежие открытия после партии.
+              Матч завершён, герой получил опыт, а progression честно отражает XP,
+              ежедневные награды и свежие открытия после партии.
             </p>
           </div>
           <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-[2rem] border border-white/14 bg-white/8">
-            <img src={hero.avatar} alt="Result hero avatar" className="h-full w-full object-contain" />
+            <img src={hero.avatar} alt="Аватар героя результата" className="h-full w-full object-contain" />
           </div>
         </div>
 
@@ -311,8 +299,8 @@ export function ResultsPage() {
                 Прогресс до следующего уровня
               </p>
               <p className="mt-2 text-sm text-white/66">
-                {levelProgress.currentXp} / {levelProgress.nextLevelXp} XP • следующий
-                уровень {levelProgress.nextLevel}
+                {levelProgress.currentXp} / {levelProgress.nextLevelXp} XP • следующий уровень{' '}
+                {levelProgress.nextLevel}
               </p>
             </div>
             <p className="text-2xl font-bold text-white">{levelProgress.progressPercent}%</p>
@@ -386,17 +374,17 @@ export function ResultsPage() {
 
         {isAuthenticated ? (
           <div className="mt-5 rounded-[1.4rem] border border-white/12 bg-white/8 px-4 py-3 text-sm text-white/72">
-            Cloud save status:{' '}
+            Статус облачного сохранения:{' '}
             <strong className="text-white">
               {cloudSaveStatus === 'idle'
-                ? 'waiting'
+                ? 'ожидание'
                 : cloudSaveStatus === 'saving-match'
-                  ? 'saving match'
+                  ? 'сохраняем матч'
                   : cloudSaveStatus === 'saving-analysis'
-                    ? 'saving analysis'
+                    ? 'сохраняем разбор'
                     : cloudSaveStatus === 'saved'
-                    ? 'saved'
-                      : 'failed'}
+                      ? 'сохранено'
+                      : 'ошибка'}
             </strong>
             {cloudSaveError ? (
               <p className="mt-2 text-xs leading-6 text-rose-200/84">{cloudSaveError}</p>
@@ -409,13 +397,13 @@ export function ResultsPage() {
             to="/versus"
             className="rounded-[1.4rem] bg-[linear-gradient(90deg,#ffd54f,#ff9f1c)] px-5 py-3 text-sm font-bold text-slate-950"
           >
-            Battle again
+            Сыграть ещё раз
           </Link>
           <Link
             to="/profile"
             className="rounded-[1.4rem] border border-white/14 bg-white/8 px-5 py-3 text-sm font-semibold text-white/84"
           >
-            Open profile
+            Открыть профиль
           </Link>
         </div>
       </section>
@@ -437,15 +425,15 @@ export function ResultsPage() {
                   : 'border border-white/12 text-white/68',
               ].join(' ')}
             >
-              {analysisSource === 'live' ? 'Live Coach' : 'Fallback Coach'}
+              {analysisSource === 'live' ? 'Живой Coach' : 'Резервный Coach'}
             </span>
           ) : null}
         </div>
 
         {isLoading ? (
           <p className="mt-5 text-sm leading-7 text-white/68">
-            Анализируем ключевые моменты партии и поднимаем честную обратную
-            связь по твоей структуре игры...
+            Анализируем ключевые моменты партии и поднимаем честную обратную связь по
+            твоей структуре игры...
           </p>
         ) : null}
 
@@ -474,8 +462,10 @@ export function ResultsPage() {
 
             <div>
               <h3 className="font-display text-3xl text-white">Визуальный разбор ошибок</h3>
-              <p className="mt-2 text-sm text-white/60 mb-4">Интерактивный плеер для просмотра лучших ходов по мнению тренера.</p>
-              <div className="rounded-[1.5rem] border border-white/12 bg-black/40 p-4 sm:p-6 flex justify-center">
+              <p className="mb-4 mt-2 text-sm text-white/60">
+                Интерактивный плеер для просмотра лучших ходов по мнению тренера.
+              </p>
+              <div className="flex justify-center rounded-[1.5rem] border border-white/12 bg-black/40 p-4 sm:p-6">
                 <MatchReplay
                   moveLog={lastResult.moves}
                   mistakes={analysis.mistakes}

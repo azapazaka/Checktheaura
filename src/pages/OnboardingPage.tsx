@@ -63,12 +63,12 @@ export function OnboardingPage() {
   return (
     <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
       <article className="arcade-panel rounded-[2.6rem] p-6 sm:p-8">
-        <p className="arcade-kicker">Cloud onboarding</p>
+        <p className="arcade-kicker">Облачный старт</p>
         <h1 className="mt-3 font-display text-4xl text-white sm:text-5xl">
           Выбери путь батыра
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-white/72">
-          Один выбор пути, один город и твой прогресс уже живёт в облаке.
+          Один выбор пути, один город, и твой прогресс уже живёт в облаке.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/68">
@@ -123,7 +123,7 @@ export function OnboardingPage() {
       <article className="arcade-panel rounded-[2.6rem] p-6 sm:p-8">
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <div>
-            <p className="arcade-kicker">Kazakhstan leaderboard</p>
+            <p className="arcade-kicker">Лидерборд Казахстана</p>
             <h2 className="mt-3 font-display text-3xl text-white sm:text-4xl">
               Закрепи свой город
             </h2>

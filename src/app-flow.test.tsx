@@ -26,7 +26,7 @@ describe('application flow', () => {
 
     await user.click(screen.getByTestId('auth-cta'))
 
-    expect(await screen.findByRole('heading', { name: /enter the arena/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /войти на арену/i })).toBeInTheDocument()
   })
 
   test('guides an authenticated user from play mode select into training flow', async () => {
@@ -61,6 +61,6 @@ describe('application flow', () => {
 
     await user.click(screen.getByTestId('mode-cta-training'))
     expect(await screen.findByRole('heading', { name: /versus/i })).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: /battle board/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /боевая доска/i })).toBeInTheDocument()
   })
 })

@@ -17,36 +17,36 @@ type RegionTab = 'all' | string
 
 const FEATURED_CITIES = ['Almaty', 'Astana', 'Shymkent', 'Aktau']
 const LEADERBOARD_EMPTY_STATE =
-  'Play your first cloud match to appear in the live leaderboard.'
+  'Сыграй первый облачный матч, чтобы появиться в живом лидерборде.'
 
 const SKIN_CARDS = [
-  { name: 'Nomad', status: 'Equip', locked: false },
-  { name: 'Khan', status: 'Active', locked: false },
-  { name: 'Shadow', status: 'Level 15', locked: true },
+  { name: 'Nomad', status: 'Надеть', locked: false },
+  { name: 'Khan', status: 'Активен', locked: false },
+  { name: 'Shadow', status: 'Уровень 15', locked: true },
   { name: 'Phantom', status: 'PRO', locked: true },
 ]
 
 const SHOP_SKINS = [
-  { name: 'Steppe Khan', price: '180 coins' },
-  { name: 'Steel Batyr', price: '220 coins' },
+  { name: 'Степной хан', price: '180 монет' },
+  { name: 'Стальной батыр', price: '220 монет' },
 ]
 
 const SHOP_THEMES = [
-  { name: 'Kazakh Ornament', price: '120 coins' },
-  { name: 'Night Gorge', price: '160 coins' },
+  { name: 'Казахский орнамент', price: '120 монет' },
+  { name: 'Ночное ущелье', price: '160 монет' },
 ]
 
 const AURA_META: Record<string, { label: string; className: string }> = {
-  warrior: { label: 'Berserk', className: 'lobby-aura-pill--berserk' },
-  strategist: { label: 'Tactician', className: 'lobby-aura-pill--tactician' },
-  shadow: { label: 'Shadow', className: 'lobby-aura-pill--shadow' },
-  fallback: { label: 'Rookie', className: 'lobby-aura-pill--rookie' },
+  warrior: { label: 'Берсерк', className: 'lobby-aura-pill--berserk' },
+  strategist: { label: 'Тактик', className: 'lobby-aura-pill--tactician' },
+  shadow: { label: 'Тень', className: 'lobby-aura-pill--shadow' },
+  fallback: { label: 'Новобранец', className: 'lobby-aura-pill--rookie' },
 }
 
 function getQuestWidget(profile: ReturnType<typeof useProgressStore.getState>['profile']) {
   if (!profile) {
     return {
-      title: 'Beat Medium AI',
+      title: 'Победи Medium AI',
       progressPercent: 33,
     }
   }
@@ -57,7 +57,7 @@ function getQuestWidget(profile: ReturnType<typeof useProgressStore.getState>['p
 
   if (!activeEntry) {
     return {
-      title: 'All daily quests cleared',
+      title: 'Все задания дня выполнены',
       progressPercent: 100,
     }
   }
@@ -76,7 +76,7 @@ function createRegionTabs(currentCity?: string | null) {
 
   return values.map((id) => ({
     id,
-    label: id === 'all' ? 'All KZ' : id,
+    label: id === 'all' ? 'Весь KZ' : id,
   }))
 }
 
@@ -124,18 +124,18 @@ function LeaderboardModalContent({
   const podiumEntries = leaderboardEntries.slice(0, 3)
   const listEntries = leaderboardEntries.slice(3)
   const currentUserInTopList = leaderboardEntries.some((entry) => entry.isCurrentUser)
-  const scopeLabel = regionTab === 'all' ? 'entire Kazakhstan' : regionTab
+  const scopeLabel = regionTab === 'all' ? 'весь Казахстан' : regionTab
 
   if (!canLoadLeaderboard) {
     return (
       <p className="lobby-modal-footnote">
-        Sign in to unlock the live Kazakhstan leaderboard by city.
+        Войди, чтобы открыть живой лидерборд Казахстана по городам.
       </p>
     )
   }
 
   if (leaderboardLoading) {
-    return <p className="lobby-modal-footnote">Loading live ranks...</p>
+    return <p className="lobby-modal-footnote">Загружаем живые ранги...</p>
   }
 
   if (leaderboardError) {
@@ -145,7 +145,7 @@ function LeaderboardModalContent({
   if (leaderboardEntries.length === 0) {
     return (
       <div className="lobby-leaderboard-empty">
-        <strong>No leaderboard entries yet</strong>
+        <strong>Пока в лидерборде пусто</strong>
         <p>{LEADERBOARD_EMPTY_STATE}</p>
       </div>
     )
@@ -169,19 +169,19 @@ function LeaderboardModalContent({
             <span className="lobby-podium-card__rank">#{entry.rank}</span>
             <strong>{entry.title}</strong>
             <span>{entry.city ?? 'KZ'} • {entry.rankScore} aura</span>
-            {entry.isCurrentUser ? <span className="lobby-current-badge">You</span> : null}
+            {entry.isCurrentUser ? <span className="lobby-current-badge">Ты</span> : null}
           </article>
         ))}
       </div>
 
       {leaderboardCurrentUser ? (
         <div className="lobby-current-rank-card">
-          <span className="lobby-current-rank-card__eyebrow">Your standing</span>
+          <span className="lobby-current-rank-card__eyebrow">Твоя позиция</span>
           <div className="lobby-current-rank-card__row">
             <strong>
               #{leaderboardCurrentUser.rank} • {leaderboardCurrentUser.title}
             </strong>
-            <span className="lobby-current-badge">You</span>
+            <span className="lobby-current-badge">Ты</span>
           </div>
           <p>
             {leaderboardCurrentUser.city ?? 'KZ'} • {leaderboardCurrentUser.rankScore} aura
@@ -204,7 +204,7 @@ function LeaderboardModalContent({
               <small>{entry.city ?? 'KZ'}</small>
             </div>
             <div className="lobby-list-row__meta">
-              {entry.isCurrentUser ? <span className="lobby-current-badge">You</span> : null}
+              {entry.isCurrentUser ? <span className="lobby-current-badge">Ты</span> : null}
               <span>{entry.rankScore}</span>
             </div>
           </div>
@@ -213,12 +213,12 @@ function LeaderboardModalContent({
 
       {leaderboardCurrentUser && !currentUserInTopList ? (
         <div className="lobby-current-rank-card lobby-current-rank-card--floating">
-          <span className="lobby-current-rank-card__eyebrow">Outside the podium</span>
+          <span className="lobby-current-rank-card__eyebrow">Вне подиума</span>
           <div className="lobby-current-rank-card__row">
             <strong>
               #{leaderboardCurrentUser.rank} • {leaderboardCurrentUser.title}
             </strong>
-            <span className="lobby-current-badge">You</span>
+            <span className="lobby-current-badge">Ты</span>
           </div>
           <p>
             {leaderboardCurrentUser.city ?? 'KZ'} • {leaderboardCurrentUser.rankScore} aura
@@ -227,7 +227,7 @@ function LeaderboardModalContent({
       ) : null}
 
       <p className="lobby-modal-footnote">
-        {leaderboardTotalPlayers} players • {scopeLabel}
+        {leaderboardTotalPlayers} игроков • {scopeLabel}
       </p>
     </>
   )
@@ -291,7 +291,7 @@ function LobbyOverlayModal({
           >
             <button
               type="button"
-              aria-label="Close overlay"
+              aria-label="Закрыть окно"
               className="lobby-modal-close"
               onClick={onClose}
             >
@@ -300,7 +300,7 @@ function LobbyOverlayModal({
 
             {activeOverlay === 'leaderboard' ? (
               <div className="lobby-modal-body">
-                <div className="lobby-modal-header">Kazakhstan leaderboard</div>
+                <div className="lobby-modal-header">Лидерборд Казахстана</div>
                 <div className="lobby-region-tabs">
                   {regionTabs.map((tab) => (
                     <button
@@ -330,7 +330,7 @@ function LobbyOverlayModal({
 
             {activeOverlay === 'skins' ? (
               <div className="lobby-modal-body">
-                <div className="lobby-modal-header">Armory skins</div>
+                <div className="lobby-modal-header">Скины арсенала</div>
                 <div className="lobby-card-grid">
                   {SKIN_CARDS.map((skin) => (
                     <article key={skin.name} className="lobby-skin-card">
@@ -347,17 +347,17 @@ function LobbyOverlayModal({
                   ))}
                 </div>
                 <button type="button" className="lobby-modal-cta">
-                  Unlock PRO
+                  Открыть PRO
                 </button>
               </div>
             ) : null}
 
             {activeOverlay === 'shop' ? (
               <div className="lobby-modal-body">
-                <div className="lobby-modal-header">Frontier shop</div>
-                <div className="lobby-shop-balance">150 coins</div>
+                <div className="lobby-modal-header">Лавка фронтира</div>
+                <div className="lobby-shop-balance">150 монет</div>
                 <section className="lobby-shop-section">
-                  <h3>Skins</h3>
+                  <h3>Скины</h3>
                   <div className="lobby-card-grid">
                     {SHOP_SKINS.map((item) => (
                       <article key={item.name} className="lobby-shop-card">
@@ -368,7 +368,7 @@ function LobbyOverlayModal({
                   </div>
                 </section>
                 <section className="lobby-shop-section">
-                  <h3>Board themes</h3>
+                  <h3>Темы доски</h3>
                   <div className="lobby-card-grid">
                     {SHOP_THEMES.map((item) => (
                       <article key={item.name} className="lobby-shop-card">
@@ -380,11 +380,11 @@ function LobbyOverlayModal({
                 </section>
                 <div className="lobby-pro-banner">
                   <div>
-                    <strong>PRO: all skins + unlimited AI coach</strong>
-                    <p>299 / month</p>
+                    <strong>PRO: все скины + безлимитный AI Coach</strong>
+                    <p>299 / месяц</p>
                   </div>
                   <button type="button" className="lobby-modal-cta lobby-modal-cta--small">
-                    Try it
+                    Попробовать
                   </button>
                 </div>
               </div>
@@ -418,14 +418,14 @@ export function HomePage() {
   const displayName =
     profile?.title ??
     (isAuthenticated
-      ? user?.user_metadata?.display_name ?? user?.email ?? 'Cloud Player'
-      : 'Guest Player')
+      ? user?.user_metadata?.display_name ?? user?.email ?? 'Облачный игрок'
+      : 'Гостевой игрок')
   const auraMeta = profile ? AURA_META[profile.classId] ?? AURA_META.fallback : AURA_META.fallback
   const questWidget = getQuestWidget(profile)
   const rankValue = String(profile?.rankScore ?? profile?.level ?? 1)
   const winsValue = String(profile?.wins ?? 0)
   const gamesValue = String(profile?.gamesPlayed ?? 0)
-  const battleLabel = profile ? 'PLAY' : 'CHOOSE CLASS'
+  const battleLabel = profile ? 'PLAY' : 'ВЫБРАТЬ КЛАСС'
   const preferredRegionTab = useMemo<RegionTab>(() => {
     const city = profile?.city
     return city && city.length > 0 ? city : 'all'
@@ -446,7 +446,7 @@ export function HomePage() {
         })
         .catch((error) => {
           setLeaderboardError(
-            error instanceof Error ? error.message : 'Failed to load leaderboard.',
+            error instanceof Error ? 'Не удалось загрузить лидерборд.' : 'Не удалось загрузить лидерборд.',
           )
         })
         .finally(() => {
@@ -479,7 +479,7 @@ export function HomePage() {
 
       <header className="lobby-room-hud">
         <div className="lobby-room-hud__brand">
-          <span className="lobby-room-hud__eyebrow">War room</span>
+          <span className="lobby-room-hud__eyebrow">Штаб арены</span>
           <h1 data-testid="app-title" className="lobby-wordmark">
             CheckTheAura
           </h1>
@@ -487,12 +487,12 @@ export function HomePage() {
 
         <div className="lobby-room-hud__status">
           <div>
-            <p className="lobby-room-hud__label">Main flow</p>
-            <p className="lobby-room-hud__code">Play / Duel / Daily</p>
+            <p className="lobby-room-hud__label">Главный цикл</p>
+            <p className="lobby-room-hud__code">Бой / Дуэль / День</p>
           </div>
           <div className="lobby-room-hud__presence">
-            <span>Focus</span>
-            <strong>Arena</strong>
+            <span>Фокус</span>
+            <strong>Арена</strong>
           </div>
         </div>
       </header>
@@ -504,7 +504,7 @@ export function HomePage() {
         <div className="min-w-0 flex-1">
           <div className="lobby-player-hud__heading">
             <div>
-              <p className="lobby-player-hud__label">Champion profile</p>
+              <p className="lobby-player-hud__label">Профиль героя</p>
               <p className="lobby-player-hud__name">{displayName}</p>
             </div>
             <span className="lobby-player-hud__level">LVL {profile?.level ?? 1}</span>
@@ -513,8 +513,8 @@ export function HomePage() {
             {auraMeta.label}
           </span>
           <p className="lobby-player-hud__meta">
-            XP channel
-            {profile?.city ? ` • ${profile.city}` : ' • Guest sector'}
+            Канал XP
+            {profile?.city ? ` • ${profile.city}` : ' • Гостевой сектор'}
           </p>
           <div className="lobby-player-hud__xp">
             <div
@@ -530,7 +530,7 @@ export function HomePage() {
                 disabled={isSigningOut}
                 className="lobby-secondary-button"
               >
-                {isSigningOut ? 'Signing out...' : 'Sign out'}
+                {isSigningOut ? 'Выходим...' : 'Выйти'}
               </button>
             ) : (
               <button
@@ -539,7 +539,7 @@ export function HomePage() {
                 onClick={() => navigate('/auth')}
                 className="lobby-secondary-button lobby-secondary-button--accent"
               >
-                Upgrade to cloud
+                Войти в облако
               </button>
             )}
           </div>
@@ -551,7 +551,7 @@ export function HomePage() {
           portraitSrc={hero.portrait}
           heroLevel={profile?.level ?? 1}
           friendSlots={2}
-          stageLabel="SANCTUM"
+          stageLabel="СВЯТИЛИЩЕ"
         />
       </div>
 
@@ -561,7 +561,7 @@ export function HomePage() {
         className="lobby-play-button"
         onClick={() => navigate(profile ? '/play' : '/class-select')}
       >
-        <span className="lobby-play-button__eyebrow">Queue into the arena</span>
+        <span className="lobby-play-button__eyebrow">Войти в очередь арены</span>
         <span className="lobby-play-button__label">{battleLabel}</span>
       </button>
 
@@ -573,9 +573,9 @@ export function HomePage() {
           className="lobby-command-trigger"
           onClick={() => setIsCommandPanelOpen((current) => !current)}
         >
-          <span className="lobby-command-trigger__eyebrow">Tactical command</span>
+          <span className="lobby-command-trigger__eyebrow">Тактическая панель</span>
           <span className="lobby-command-trigger__label">
-            {isCommandPanelOpen ? 'Collapse systems' : 'Open systems'}
+            {isCommandPanelOpen ? 'Свернуть системы' : 'Открыть системы'}
           </span>
         </button>
 
@@ -591,8 +591,8 @@ export function HomePage() {
             >
               <div className="lobby-command-panel__header">
                 <div>
-                  <p className="lobby-command-panel__eyebrow">Operations</p>
-                  <h2 className="lobby-command-panel__title">Command drawer</h2>
+                  <p className="lobby-command-panel__eyebrow">Операции</p>
+                  <h2 className="lobby-command-panel__title">Командный отсек</h2>
                 </div>
                 <button
                   type="button"
@@ -605,20 +605,20 @@ export function HomePage() {
 
               <div className="lobby-command-actions">
                 <CommandActionButton
-                  label="Open leaderboard"
-                  hint="View Kazakhstan ranks"
+                  label="Открыть лидерборд"
+                  hint="Посмотреть ранги Казахстана"
                   icon={trophyStarIcon}
                   onClick={() => handleOpenOverlay('leaderboard')}
                 />
                 <CommandActionButton
-                  label="Open skins"
-                  hint="Manage hero cosmetics"
+                  label="Открыть скины"
+                  hint="Управлять внешним видом героя"
                   icon={schoolBagIcon}
                   onClick={() => handleOpenOverlay('skins')}
                 />
                 <CommandActionButton
-                  label="Open shop"
-                  hint="Spend coins and unlocks"
+                  label="Открыть магазин"
+                  hint="Тратить монеты и открывать награды"
                   icon={shoppingCartIcon}
                   onClick={() => handleOpenOverlay('shop')}
                 />
@@ -626,18 +626,18 @@ export function HomePage() {
 
               <div className="lobby-command-stats">
                 <article className="lobby-stat-card">
-                  <span className="lobby-stat-card__label">Rank</span>
+                  <span className="lobby-stat-card__label">Ранг</span>
                   <div className="lobby-stat-card__value">
                     {rankValue}
                     {profile?.rankScore ? <span className="lobby-stat-card__trophy">T</span> : null}
                   </div>
                 </article>
                 <article className="lobby-stat-card">
-                  <span className="lobby-stat-card__label">Wins</span>
+                  <span className="lobby-stat-card__label">Победы</span>
                   <div className="lobby-stat-card__value">{winsValue}</div>
                 </article>
                 <article className="lobby-stat-card">
-                  <span className="lobby-stat-card__label">Games</span>
+                  <span className="lobby-stat-card__label">Матчи</span>
                   <div className="lobby-stat-card__value">{gamesValue}</div>
                 </article>
               </div>
@@ -645,7 +645,7 @@ export function HomePage() {
               <article className="lobby-quest-widget">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="lobby-quest-widget__eyebrow">Daily quest</p>
+                    <p className="lobby-quest-widget__eyebrow">Задание дня</p>
                     <p className="lobby-quest-widget__title">{questWidget.title}</p>
                   </div>
                   <span className="lobby-quest-widget__badge">2x XP</span>

@@ -133,13 +133,13 @@ describe('HomePage', () => {
     await user.click(screen.getByTestId('lobby-command-trigger'))
     expect(screen.getByTestId('lobby-command-panel')).toBeInTheDocument()
 
-    await user.click(screen.getByLabelText('Open leaderboard'))
+    await user.click(screen.getByLabelText('Открыть лидерборд'))
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText(/kazakhstan leaderboard/i)).toBeInTheDocument()
-    expect(screen.getAllByText('You').length).toBeGreaterThan(0)
-    expect(screen.getByText(/your standing/i)).toBeInTheDocument()
-    expect(screen.getByText(/18 players/i)).toBeInTheDocument()
+    expect(screen.getByText(/лидерборд казахстана/i)).toBeInTheDocument()
+    expect(screen.getAllByText('Ты').length).toBeGreaterThan(0)
+    expect(screen.getByText(/твоя позиция/i)).toBeInTheDocument()
+    expect(screen.getByText(/18 игроков/i)).toBeInTheDocument()
   })
 
   test('sends unauthenticated players to auth from the upgrade CTA', async () => {
@@ -189,10 +189,10 @@ describe('HomePage', () => {
     )
 
     await user.click(screen.getByTestId('lobby-command-trigger'))
-    await user.click(screen.getByLabelText('Open leaderboard'))
+    await user.click(screen.getByLabelText('Открыть лидерборд'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
 
-    await user.click(screen.getByLabelText('Close overlay'))
+    await user.click(screen.getByLabelText('Закрыть окно'))
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })

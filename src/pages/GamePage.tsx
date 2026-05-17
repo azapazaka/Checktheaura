@@ -93,7 +93,7 @@ export function GamePage() {
 
     setShadowHint(null)
     setGameState((current) => applyMove(current, move))
-    
+
     if (move.captured.length > 0) audioSystem.playCapture()
     else audioSystem.playMove()
   })
@@ -155,47 +155,55 @@ export function GamePage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
           <div className="battle-banner battle-banner--player">
             <div className="battle-banner__avatar">
-              <img src={playerHero.avatar} alt="Player hero avatar" className="h-full w-full object-contain" />
+              <img
+                src={playerHero.avatar}
+                alt="Аватар героя игрока"
+                className="h-full w-full object-contain"
+              />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-white/58">You</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Ты</p>
               <p className="mt-1 font-display text-2xl text-white">{classMeta.title}</p>
-              <p className="mt-1 text-sm text-white/64">{whiteUnits} units remaining</p>
+              <p className="mt-1 text-sm text-white/64">Осталось фигур: {whiteUnits}</p>
             </div>
           </div>
 
           <div className="rounded-full border border-white/16 bg-black/20 px-4 py-2 text-center text-sm font-semibold uppercase tracking-[0.24em] text-white/78">
-            {gameState.currentTurn === 'white' ? 'Your turn' : 'Enemy turn'}
+            {gameState.currentTurn === 'white' ? 'Твой ход' : 'Ход врага'}
           </div>
 
           <div className="battle-banner battle-banner--enemy">
             <div className="battle-banner__avatar">
-              <img src={opponentHero.fullAvatar} alt="Enemy hero avatar" className="h-full w-full object-contain" />
+              <img
+                src={opponentHero.fullAvatar}
+                alt="Аватар героя соперника"
+                className="h-full w-full object-contain"
+              />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Enemy</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Враг</p>
               <p className="mt-1 font-display text-2xl text-white">
                 {opponentClass === 'warrior' ? 'Воин AI' : 'Стратег AI'}
               </p>
-              <p className="mt-1 text-sm text-white/64">{blackUnits} units remaining</p>
+              <p className="mt-1 text-sm text-white/64">Осталось фигур: {blackUnits}</p>
             </div>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
           {[
-            ['Difficulty', effectiveDifficulty.toUpperCase()],
-            ['Moves', String(gameState.moves.length)],
-            ['Capture Chain', gameState.forcedSequence ? 'Locked' : 'Free'],
+            ['Сложность', effectiveDifficulty.toUpperCase()],
+            ['Ходы', String(gameState.moves.length)],
+            ['Цепочка взятий', gameState.forcedSequence ? 'Зафиксирована' : 'Свободна'],
             [
-              'Hint',
+              'Совет',
               !isShadow
-                ? 'Off'
+                ? 'Выкл'
                 : shadowHintUsed
-                  ? 'Spent'
+                  ? 'Потрачен'
                   : gameState.currentTurn === 'white'
-                    ? 'Ready'
-                    : 'Waiting',
+                    ? 'Готов'
+                    : 'Ожидание',
             ],
           ].map(([label, value]) => (
             <div key={label} className="arcade-chip min-h-[4.2rem] min-w-[10rem] flex-col items-start">
@@ -208,14 +216,14 @@ export function GamePage() {
         <div className="mt-5 rounded-[2.2rem] border border-white/14 bg-[linear-gradient(180deg,rgba(188,216,255,0.16),rgba(18,23,58,0.28))] p-3 sm:p-4">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="arcade-kicker">Battle phase</p>
+              <p className="arcade-kicker">Фаза боя</p>
               <h2 data-testid="game-heading" className="mt-2 font-display text-4xl text-white">
-                {activeDailyChallenge ? 'Daily Challenge' : 'Battle Board'}
+                {activeDailyChallenge ? 'Испытание дня' : 'Боевая доска'}
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-white/66">
               Игровые фигуры визуально заменены на мини-героев. Логика шашек и
-              обязательных рубок остается прежней.
+              обязательных рубок остаётся прежней.
             </p>
           </div>
 
@@ -251,7 +259,7 @@ export function GamePage() {
                         setShadowHint(null)
                         setGameState((current) => applyMove(current, targetMove))
                         setSelectedSquare(null)
-                        
+
                         if (targetMove.captured.length > 0) audioSystem.playCapture()
                         else if (targetMove.to.row === 0) audioSystem.playPromote()
                         else audioSystem.playMove()
@@ -314,22 +322,22 @@ export function GamePage() {
 
       <aside className="grid gap-5">
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h3 className="font-display text-3xl text-white">Match HUD</h3>
+          <h3 className="font-display text-3xl text-white">Боевой HUD</h3>
           <div className="mt-5 space-y-3">
             {[
-              ['Class bonus', classMeta.activeBonus],
-              ['Available moves', `${legalMoves.length}`],
-              ['No-capture count', `${gameState.moveCountWithoutCapture}`],
+              ['Бонус класса', classMeta.activeBonus],
+              ['Доступные ходы', `${legalMoves.length}`],
+              ['Счётчик без взятия', `${gameState.moveCountWithoutCapture}`],
               [
-                'Forced chain',
+                'Обязательная цепочка',
                 gameState.forcedSequence
-                  ? `Continue from ${gameState.forcedSequence.row}-${gameState.forcedSequence.col}`
-                  : 'No chain locked',
+                  ? `Продолжай с ${gameState.forcedSequence.row}-${gameState.forcedSequence.col}`
+                  : 'Цепочка не зафиксирована',
               ],
               ...(activeDailyChallenge
                 ? [
-                    ['Challenge', activeDailyChallenge.title],
-                    ['Reward', `+${activeDailyChallenge.rewardXp} XP`],
+                    ['Испытание', activeDailyChallenge.title],
+                    ['Награда', `+${activeDailyChallenge.rewardXp} XP`],
                   ]
                 : []),
             ].map(([label, value]) => (
@@ -383,7 +391,7 @@ export function GamePage() {
               }}
               className="rounded-[1.3rem] bg-[linear-gradient(90deg,#ffd54f,#ff9f1c)] px-4 py-3 text-sm font-bold text-slate-950"
             >
-              Restart match
+              Перезапустить матч
             </button>
           </div>
 
@@ -396,11 +404,11 @@ export function GamePage() {
         </section>
 
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h3 className="font-display text-3xl text-white">Board Rules</h3>
+          <h3 className="font-display text-3xl text-white">Правила доски</h3>
           <p className="mt-4 text-sm leading-7 text-white/68">
-            Если доступно взятие, обычные ходы скрыто проигрывают приоритет и
-            игра ведет тебя в обязательную рубку. После взятия цепочка
-            продолжается автоматически, пока правила шашек требуют продолжать.
+            Если доступно взятие, обычные ходы автоматически теряют приоритет, и
+            игра ведёт тебя в обязательную рубку. После взятия цепочка продолжается
+            автоматически, пока правила шашек требуют продолжать.
           </p>
         </section>
       </aside>

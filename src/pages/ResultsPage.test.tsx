@@ -81,7 +81,7 @@ describe('ResultsPage', () => {
     )
 
     await waitFor(() =>
-      expect(screen.getByText(/fallback coach/i)).toBeInTheDocument(),
+      expect(screen.getByText(/резервный coach/i)).toBeInTheDocument(),
     )
 
     expect(screen.getByText(/прогресс до следующего уровня/i)).toBeInTheDocument()

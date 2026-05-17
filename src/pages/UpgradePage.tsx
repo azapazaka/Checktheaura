@@ -26,7 +26,7 @@ export function UpgradePage() {
   return (
     <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
       <article className="arcade-panel rounded-[2.6rem] p-6 sm:p-8">
-        <p className="arcade-kicker">Upgrade to cloud</p>
+        <p className="arcade-kicker">Переход в облако</p>
         <h1 className="mt-3 font-display text-4xl text-white sm:text-5xl">
           Локальный прогресс найден
         </h1>
@@ -39,15 +39,15 @@ export function UpgradePage() {
           <p className="text-sm font-semibold text-white">Найденный прогресс</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-[1.4rem] border border-white/12 bg-black/20 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Class</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Класс</p>
               <p className="mt-2 text-lg font-semibold text-white">
-                {classMeta?.title ?? 'Not selected'}
+                {classMeta?.title ?? 'Не выбран'}
               </p>
             </div>
             <div className="rounded-[1.4rem] border border-white/12 bg-black/20 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Progress</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/58">Прогресс</p>
               <p className="mt-2 text-lg font-semibold text-white">
-                Lv. {localGuestProfile?.level ?? 1} • {localGuestProfile?.xp ?? 0} XP
+                LVL {localGuestProfile?.level ?? 1} • {localGuestProfile?.xp ?? 0} XP
               </p>
             </div>
           </div>
@@ -55,7 +55,7 @@ export function UpgradePage() {
       </article>
 
       <article className="arcade-panel rounded-[2.6rem] p-6 sm:p-8">
-        <p className="arcade-kicker">Choose what to keep</p>
+        <p className="arcade-kicker">Выбери, что сохранить</p>
         <div className="mt-5 grid gap-4">
           <button
             type="button"
@@ -85,8 +85,8 @@ export function UpgradePage() {
           >
             <strong className="block text-lg text-white">Начать новый облачный профиль</strong>
             <span className="mt-2 block text-sm leading-6 text-white/72">
-              Локальный run останется на этом устройстве, а облачный аккаунт начнётся с новой
-              инициализации.
+              Локальный run останется на этом устройстве, а облачный аккаунт начнётся с
+              новой инициализации.
             </span>
           </button>
         </div>

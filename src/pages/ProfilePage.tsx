@@ -16,23 +16,23 @@ import { useProgressStore } from '../store/progress-store'
 
 const growthTracks = {
   str: {
-    label: 'Strength Track',
-    description: 'Pressure, captures and warrior-style momentum.',
+    label: 'Трек силы',
+    description: 'Давление, взятия и инерция в стиле воина.',
     gradient: 'from-rose-500 to-orange-400',
   },
   int: {
-    label: 'Insight Track',
-    description: 'Board reading and long tactical structure.',
+    label: 'Трек чтения',
+    description: 'Чтение доски и длинная тактическая структура.',
     gradient: 'from-sky-400 to-blue-500',
   },
   agi: {
-    label: 'Tempo Track',
-    description: 'Fast transitions, initiative and clean chains.',
+    label: 'Трек темпа',
+    description: 'Быстрые переходы, инициатива и чистые цепочки.',
     gradient: 'from-emerald-400 to-cyan-400',
   },
   lck: {
-    label: 'Aura Track',
-    description: 'Confidence, streaks and late-match composure.',
+    label: 'Трек ауры',
+    description: 'Уверенность, серии и хладнокровие в концовке.',
     gradient: 'from-violet-400 to-fuchsia-500',
   },
 } as const
@@ -120,7 +120,7 @@ export function ProfilePage() {
   if (!profile) {
     return (
       <section className="arcade-panel rounded-[2.5rem] p-8">
-        <h2 className="font-display text-4xl text-white">Profile is not ready yet</h2>
+        <h2 className="font-display text-4xl text-white">Профиль пока не готов</h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
           Сначала выбери класс, чтобы открыть progression-профиль, историю матчей и рост
           своего героя.
@@ -151,12 +151,12 @@ export function ProfilePage() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="arcade-kicker">Hero profile</p>
+              <p className="arcade-kicker">Профиль героя</p>
               <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
                 {profile.title}
               </h2>
               <p className="mt-2 text-base text-white/72">
-                {classMeta.title} • Lv. {profile.level}
+                {classMeta.title} • LVL {profile.level}
               </p>
             </div>
             {inRouter ? (
@@ -164,11 +164,11 @@ export function ProfilePage() {
                 to="/"
                 className="rounded-full border border-white/16 bg-white/8 px-4 py-2 text-sm font-semibold text-white/86"
               >
-                Back to lobby
+                Назад в лобби
               </Link>
             ) : (
               <span className="rounded-full border border-white/16 bg-white/8 px-4 py-2 text-sm font-semibold text-white/86">
-                Back to lobby
+                Назад в лобби
               </span>
             )}
           </div>
@@ -179,14 +179,14 @@ export function ProfilePage() {
                 <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-[1.4rem] border border-white/14 bg-white/8">
                   <img
                     src={hero.avatar}
-                    alt="Profile hero avatar"
+                    alt="Аватар героя профиля"
                     className="h-full w-full object-contain"
                   />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{classMeta.title}</p>
                   <p className="mt-1 text-sm text-white/64">
-                    {hero.stage === 'full' ? 'Elite form active' : 'Base form evolving'}
+                    {hero.stage === 'full' ? 'Элитная форма активна' : 'Базовая форма развивается'}
                   </p>
                 </div>
               </div>
@@ -200,10 +200,10 @@ export function ProfilePage() {
                 {levelProgress.currentXp} / {levelProgress.nextLevelXp} XP
               </p>
               <div className="mt-4 rounded-[1.5rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/78">
-                <strong className="block text-white">Develop your hero</strong>
+                <strong className="block text-white">Развивай героя</strong>
                 <span className="mt-2 block">
-                  Attributes activate in phase 2. Пока эти треки показывают направление роста,
-                  а не раздачу пустых очков в никуда.
+                  Атрибуты активируются во второй фазе. Пока эти треки показывают направление
+                  роста, а не раздачу пустых очков в никуда.
                 </span>
               </div>
             </div>
@@ -213,21 +213,21 @@ export function ProfilePage() {
               <div className="grid gap-4 md:grid-cols-2 md:items-end">
                 <div className="rounded-[1.5rem] border border-white/12 bg-black/18 p-3">
                   <p className="text-xs uppercase tracking-[0.24em] text-white/58">
-                    Current form
+                    Текущая форма
                   </p>
                   <img
                     src={hero.portrait}
-                    alt="Current hero portrait"
+                    alt="Текущий портрет героя"
                     className="mx-auto h-56 w-full object-contain"
                   />
                 </div>
                 <div className="rounded-[1.5rem] border border-white/12 bg-black/18 p-3">
                   <p className="text-xs uppercase tracking-[0.24em] text-white/58">
-                    Elite target
+                    Элитная цель
                   </p>
                   <img
                     src={heroFull}
-                    alt="Elite hero portrait"
+                    alt="Элитный портрет героя"
                     className="mx-auto h-56 w-full object-contain"
                   />
                 </div>
@@ -238,7 +238,7 @@ export function ProfilePage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.24em] text-white/58">Город</p>
-              <p className="mt-2 text-3xl font-bold text-white">{profile.city ?? 'Guest'}</p>
+              <p className="mt-2 text-3xl font-bold text-white">{profile.city ?? 'Гость'}</p>
             </div>
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.24em] text-white/58">Место по Казахстану</p>
@@ -257,28 +257,28 @@ export function ProfilePage() {
               />
             </div>
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Win Games</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Победы</p>
               <p className="mt-2 text-3xl font-bold text-white">{profile.wins}</p>
             </div>
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Games</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Матчи</p>
               <p className="mt-2 text-3xl font-bold text-white">{profile.gamesPlayed}</p>
             </div>
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Win Rate</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-white/58">Винрейт</p>
               <p className="mt-2 text-3xl font-bold text-white">{winRate}%</p>
             </div>
           </div>
 
           {!isAuthenticated ? (
             <div className="rounded-[1.6rem] border border-cyan-300/18 bg-cyan-400/10 px-4 py-4 text-sm leading-6 text-cyan-50/88">
-              Авторизуйся, чтобы увидеть место по Казахстану, место в своём городе и облачную
-              историю AI Coach.
+              Авторизуйся, чтобы увидеть место по Казахстану, место в своём городе и
+              облачную историю AI Coach.
             </div>
           ) : !visibleIsRankLoading && !hasCloudRank ? (
             <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/72">
-              Сыграй первый облачный матч, чтобы занять место в рейтинге Казахстана и своего
-              города.
+              Сыграй первый облачный матч, чтобы занять место в рейтинге Казахстана и
+              своего города.
             </div>
           ) : null}
         </div>
@@ -286,7 +286,7 @@ export function ProfilePage() {
 
       <div className="grid gap-5">
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h3 className="font-display text-3xl text-white">Growth Tracks</h3>
+          <h3 className="font-display text-3xl text-white">Треки роста</h3>
           <div className="mt-5 grid gap-3">
             {Object.entries(profile.stats).map(([key, value], index) => {
               const track = growthTracks[key as keyof typeof growthTracks]
@@ -317,7 +317,7 @@ export function ProfilePage() {
         </section>
 
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h3 className="font-display text-3xl text-white">Daily Quests</h3>
+          <h3 className="font-display text-3xl text-white">Задания дня</h3>
           <div className="mt-5 grid gap-3">
             {Object.entries(dailyQuests.completed).map(([key, completed]) => (
               <div
@@ -341,7 +341,7 @@ export function ProfilePage() {
                         : 'border border-white/14 text-white/66',
                     ].join(' ')}
                   >
-                    {completed ? 'Done' : 'Active'}
+                    {completed ? 'Выполнено' : 'Активно'}
                   </span>
                 </div>
               </div>
@@ -350,7 +350,7 @@ export function ProfilePage() {
         </section>
 
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h3 className="font-display text-3xl text-white">Recent Matches</h3>
+          <h3 className="font-display text-3xl text-white">Последние матчи</h3>
           <div className="mt-5 space-y-3">
             {profile.history.length === 0 ? (
               <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
@@ -393,15 +393,15 @@ export function ProfilePage() {
         </section>
 
         <section className="arcade-panel rounded-[2.5rem] p-5">
-          <h3 className="font-display text-3xl text-white">Coach History</h3>
+          <h3 className="font-display text-3xl text-white">История Coach</h3>
           <div className="mt-5 space-y-3">
             {!isAuthenticated ? (
               <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
-                Sign in to save AI Coach analysis and open it across devices.
+                Войди, чтобы сохранять разбор AI Coach и открывать его на разных устройствах.
               </p>
             ) : visibleCoachHistory.length === 0 ? (
               <p className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4 text-sm leading-6 text-white/68">
-                No saved coach analysis yet. Finish a cloud match to build the library.
+                Сохранённого разбора пока нет. Заверши облачный матч, чтобы собрать библиотеку.
               </p>
             ) : (
               visibleCoachHistory.map((analysis) => (
@@ -410,7 +410,7 @@ export function ProfilePage() {
                   className="rounded-[1.6rem] border border-white/12 bg-white/8 px-4 py-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-white">Coach score {analysis.score}/10</p>
+                    <p className="font-semibold text-white">Оценка Coach {analysis.score}/10</p>
                     <span className="text-xs uppercase tracking-[0.22em] text-white/52">
                       {analysis.source}
                     </span>

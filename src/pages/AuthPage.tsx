@@ -66,21 +66,21 @@ export function AuthPage() {
     }
 
     if (mode === 'sign-up' && result.needsEmailConfirmation) {
-      setStatusMessage('Check your inbox to confirm the account, then come back to continue.')
+      setStatusMessage('Проверь почту, подтверди аккаунт и возвращайся в игру.')
       return
     }
 
     setStatusMessage(
-      mode === 'sign-in' ? 'Arena access granted. Redirecting...' : 'Account created. Redirecting...',
+      mode === 'sign-in' ? 'Доступ на арену открыт. Перенаправляем...' : 'Аккаунт создан. Перенаправляем...',
     )
   }
 
   if (isLoading || isAuthenticated) {
     return (
       <section className="arcade-panel rounded-[2.4rem] px-6 py-12 text-center">
-        <p className="arcade-kicker">Checkpoint sync</p>
+        <p className="arcade-kicker">Синхронизация точки входа</p>
         <h2 className="mt-3 font-display text-4xl text-white sm:text-5xl">
-          Preparing your arena...
+          Готовим твою арену...
         </h2>
       </section>
     )
@@ -94,19 +94,20 @@ export function AuthPage() {
       <article className="arcade-panel overflow-hidden rounded-[2.6rem] p-6 sm:p-8">
         <p className="arcade-kicker">Supabase Auth</p>
         <h1 className="mt-3 font-display text-4xl text-white sm:text-5xl">
-          Save your progress behind a real player login
+          Сохрани прогресс за настоящим входом игрока
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-white/72 sm:text-lg">
-          Sign in to unlock cloud saves, Kazakhstan leaderboard by city,
-          friend-room multiplayer and saved AI Coach history. Guest mode still
-          works for local AI runs, but cloud features need a real account.
+          Войди, чтобы открыть облачные сохранения, лидерборд Казахстана по городам,
+          friend-room мультиплеер и сохранённую историю AI Coach. Гостевой режим всё
+          ещё работает для локальных боёв против AI, но облачным возможностям нужен
+          настоящий аккаунт.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            ['Cloud saves', 'Profiles, match history and coach analysis are saved in Supabase.'],
-            ['Leaderboard', 'Your wins and XP appear in national and city rankings.'],
-            ['Friend rooms', 'Create live multiplayer rooms and keep playing from any device.'],
+            ['Облачные сохранения', 'Профили, история матчей и разбор Coach сохраняются в Supabase.'],
+            ['Лидерборд', 'Твои победы и XP появляются в национальном и городском рейтинге.'],
+            ['Комнаты с друзьями', 'Создавай живые мультиплеерные комнаты и продолжай игру с любого устройства.'],
           ].map(([title, body]) => (
             <div
               key={title}
@@ -121,18 +122,17 @@ export function AuthPage() {
         {!isConfigured ? (
           <div className="mt-6 rounded-[2rem] border border-amber-300/20 bg-amber-400/10 px-5 py-5">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100">
-              Missing config
+              Не хватает конфигурации
             </p>
             <p className="mt-3 text-sm leading-6 text-white/78">
-              Add these variables to your local env before testing the auth flow:
+              Добавь эти переменные в локальный env перед проверкой auth flow:
             </p>
             <pre className="mt-4 overflow-x-auto rounded-[1.4rem] bg-slate-950/70 px-4 py-4 text-sm text-amber-50">
 {`VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=`}
             </pre>
             <p className="mt-3 text-sm leading-6 text-white/66">
-              Use the project URL and publishable key from your Supabase project&apos;s
-              Connect dialog.
+              Возьми project URL и publishable key из Connect dialog своего проекта Supabase.
             </p>
           </div>
         ) : null}
@@ -142,10 +142,10 @@ VITE_SUPABASE_PUBLISHABLE_KEY=`}
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="arcade-kicker">
-              {mode === 'sign-in' ? 'Return to lobby' : 'Create account'}
+              {mode === 'sign-in' ? 'Возвращение в лобби' : 'Создание аккаунта'}
             </p>
             <h2 className="mt-3 font-display text-3xl text-white sm:text-4xl">
-              {mode === 'sign-in' ? 'Enter the arena' : 'Claim your checkpoint'}
+              {mode === 'sign-in' ? 'Войти на арену' : 'Закрепить чекпоинт'}
             </h2>
           </div>
           <div className="rounded-full border border-white/14 bg-white/8 px-3 py-2 text-xs uppercase tracking-[0.24em] text-white/70">
@@ -155,7 +155,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=`}
 
         {searchParams.get('next') ? (
           <p className="mt-5 rounded-[1.5rem] border border-cyan-300/16 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-50">
-            Sign in to continue to your cloud route.
+            Войди, чтобы продолжить путь по облачному маршруту.
           </p>
         ) : null}
 
@@ -176,7 +176,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=`}
                   : 'border border-white/14 bg-white/8 text-white/76',
               ].join(' ')}
             >
-              {value === 'sign-in' ? 'Sign in' : 'Sign up'}
+              {value === 'sign-in' ? 'Вход' : 'Регистрация'}
             </button>
           ))}
         </div>
@@ -195,12 +195,12 @@ VITE_SUPABASE_PUBLISHABLE_KEY=`}
             }}
             className="rounded-[1.4rem] border border-white/14 bg-white/8 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Continue with Google
+            Продолжить через Google
           </button>
 
           <div className="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-white/45">
             <span className="h-px flex-1 bg-white/12" />
-            <span>or use email</span>
+            <span>или по email</span>
             <span className="h-px flex-1 bg-white/12" />
           </div>
 
@@ -218,14 +218,14 @@ VITE_SUPABASE_PUBLISHABLE_KEY=`}
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-semibold text-white/84">Password</span>
+            <span className="text-sm font-semibold text-white/84">Пароль</span>
             <input
               type="password"
               autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="rounded-[1.4rem] border border-white/14 bg-black/20 px-4 py-3 text-white outline-none transition placeholder:text-white/32 focus:border-cyan-300/35"
-              placeholder="At least 6 characters"
+              placeholder="Минимум 6 символов"
               minLength={6}
               required
             />
@@ -252,10 +252,10 @@ VITE_SUPABASE_PUBLISHABLE_KEY=`}
             className="rounded-[1.6rem] bg-[linear-gradient(90deg,#ffe059,#ff8a3d)] px-4 py-3 text-base font-bold text-slate-950 shadow-[0_18px_28px_rgba(255,174,0,0.26)] transition disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting
-              ? 'Opening checkpoint...'
+              ? 'Открываем чекпоинт...'
               : mode === 'sign-in'
-                ? 'Sign in'
-                : 'Create account'}
+                ? 'Войти'
+                : 'Создать аккаунт'}
           </button>
         </form>
       </article>

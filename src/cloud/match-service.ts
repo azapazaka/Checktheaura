@@ -51,7 +51,20 @@ export async function fetchCoachAnalysis(matchId: string) {
     throw error
   }
 
-  return data as CoachAnalysisRecord | null
+  if (!data) {
+    return null
+  }
+
+  const analysisData = (data as Record<string, unknown>).analysis_data as
+    | { highlights?: string[]; mistakes?: unknown[]; tip?: string }
+    | undefined
+
+  return {
+    ...data,
+    highlights: analysisData?.highlights ?? [],
+    mistakes: analysisData?.mistakes ?? [],
+    tip: analysisData?.tip ?? '',
+  } as unknown as CoachAnalysisRecord
 }
 
 export function mergePersistedAnalysis(

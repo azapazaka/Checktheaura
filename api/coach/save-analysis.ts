@@ -32,9 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         match_id: payload.matchId,
         user_id: user.id,
         score: normalizedScore,
-        highlights: payload.analysis.highlights,
-        mistakes: payload.analysis.mistakes,
-        tip: payload.analysis.tip,
+        analysis_data: payload.analysis,
         source: payload.source,
         status: payload.status ?? 'ready',
       })

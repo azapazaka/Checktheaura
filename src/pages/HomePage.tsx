@@ -1,5 +1,5 @@
-﻿import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import schoolBagIcon from '../assets/lobby-icons/school-bag.png'
@@ -431,25 +431,30 @@ export function HomePage() {
     return city && city.length > 0 ? city : 'all'
   }, [profile?.city])
 
-  async function loadLeaderboard(scope: RegionTab) {
-    if (!isAuthenticated || !user) {
-      return
-    }
+  const handleLeaderboardScopeChange = useCallback(
+    (scope: RegionTab) => {
+      if (!user) {
+        return
+      }
 
-    setLeaderboardLoading(true)
-    setLeaderboardError(null)
+      setLeaderboardLoading(true)
+      setLeaderboardError(null)
 
-    try {
-      const snapshot = await fetchLeaderboard(scope, user.id)
-      setLeaderboardSnapshot(snapshot)
-    } catch (error) {
-      setLeaderboardError(
-        error instanceof Error ? error.message : 'Failed to load leaderboard.',
-      )
-    } finally {
-      setLeaderboardLoading(false)
-    }
-  }
+      fetchLeaderboard(scope, user.id)
+        .then((snapshot) => {
+          setLeaderboardSnapshot(snapshot)
+        })
+        .catch((error) => {
+          setLeaderboardError(
+            error instanceof Error ? error.message : 'Failed to load leaderboard.',
+          )
+        })
+        .finally(() => {
+          setLeaderboardLoading(false)
+        })
+    },
+    [user],
+  )
 
   async function handleSignOut() {
     setIsSigningOut(true)
@@ -667,9 +672,7 @@ export function HomePage() {
         leaderboardTotalPlayers={leaderboardSnapshot.totalPlayers}
         leaderboardLoading={leaderboardLoading}
         leaderboardError={leaderboardError}
-        onLeaderboardScopeChange={(scope) => {
-          void loadLeaderboard(scope)
-        }}
+        onLeaderboardScopeChange={handleLeaderboardScopeChange}
       />
     </section>
   )

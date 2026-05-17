@@ -245,8 +245,8 @@ as $$
     from public.profiles
     where city_filter is null or profiles.city = city_filter
   )
-  select user_id, rank, title, city, wins, level, xp, rank_score
-  from ranked
-  order by rank asc
+  select r.user_id, r.rank, r.title, r.city, r.wins, r.level, r.xp, r.rank_score
+  from ranked r
+  order by r.rank asc
   limit 25;
 $$;

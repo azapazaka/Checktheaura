@@ -14,7 +14,7 @@ const moveSchema = z.object({
   promoted: z.boolean(),
 })
 
-export const coachAnalyzeRequestSchema: z.ZodType<CoachAnalyzeRequest> = z.object({
+export const coachAnalyzeRequestSchema = z.object({
   moves: z.array(moveSchema),
   result: z.object({
     winner: z.enum(['white', 'black']).nullable(),

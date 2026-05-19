@@ -1,3 +1,4 @@
+import { request as httpsRequest } from 'node:https'
 import { z } from 'zod'
 import { buildFallbackCoachAnalysis } from './fallback.js'
 import type { CoachAnalyzeRequest, CoachAnalyzeResponse } from './types.js'
@@ -67,6 +68,77 @@ CRITICAL CONSTRAINTS:
 2. All text (highlights, explanations, tips) must be in Russian.
 3. Keep the tone professional, educational, and encouraging.
 4. Focus your mistakes analysis on actual tactical errors (such as missing a jump, walking into a double-jump, letting the opponent get a King unnecessarily, or giving up control of the center diagonal). If the player played very well and there are no notable tactical mistakes, you may leave the "mistakes" array empty.`;
+
+type FetchLike = (
+  input: string,
+  init?: {
+    method?: string
+    headers?: Record<string, string>
+    body?: string
+  },
+) => Promise<{
+  ok: boolean
+  status: number
+  json(): Promise<unknown>
+}>
+
+function createNodeFetch(): FetchLike {
+  return async (input, init) =>
+    new Promise((resolve, reject) => {
+      const url = new URL(input)
+      const req = httpsRequest(
+        url,
+        {
+          method: init?.method ?? 'GET',
+          headers: init?.headers,
+        },
+        (res) => {
+          const chunks: Buffer[] = []
+
+          res.on('data', (chunk: Buffer | string) => {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+          })
+
+          res.on('end', () => {
+            const text = Buffer.concat(chunks).toString('utf8')
+            const status = res.statusCode ?? 500
+
+            resolve({
+              ok: status >= 200 && status < 300,
+              status,
+              json: async () => {
+                if (!text) {
+                  return null
+                }
+
+                return JSON.parse(text) as unknown
+              },
+            })
+          })
+        },
+      )
+
+      req.on('error', reject)
+
+      if (init?.body) {
+        req.write(init.body)
+      }
+
+      req.end()
+    })
+}
+
+function resolveFetchImpl(fetchImpl?: typeof fetch): FetchLike {
+  if (fetchImpl) {
+    return fetchImpl as FetchLike
+  }
+
+  if (typeof globalThis.fetch === 'function') {
+    return globalThis.fetch.bind(globalThis) as FetchLike
+  }
+
+  return createNodeFetch()
+}
 
 function buildUserPrompt(payload: CoachAnalyzeRequest) {
   return JSON.stringify({
@@ -156,7 +228,7 @@ async function makeRequest(
   apiKey: string,
   model: string,
   payload: CoachAnalyzeRequest,
-  fetchImpl: typeof fetch,
+  fetchImpl: FetchLike,
 ): Promise<CoachAnalyzeResponse> {
   if (provider === 'groq') {
     const response = await fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
@@ -242,12 +314,17 @@ export async function analyzeCoachPayload(
   },
 ): Promise<CoachAnalyzeResponse> {
   const payload = coachAnalyzeRequestSchema.parse(input)
+
+  if (payload.moves.length === 0) {
+    return buildFallbackCoachAnalysis(payload)
+  }
+
   const provider =
     options?.provider ??
     ((process.env.COACH_AI_PROVIDER?.toLowerCase() as CoachProvider | undefined) ??
       (process.env.GROQ_API_KEY || process.env.GROQ_API_KEY_FALLBACK ? 'groq' : 'anthropic'))
 
-  const fetchImpl = options?.fetchImpl ?? fetch
+  const fetchImpl = resolveFetchImpl(options?.fetchImpl)
   const model =
     options?.model ??
     (provider === 'groq'
@@ -260,10 +337,6 @@ export async function analyzeCoachPayload(
 
   const fallbackApiKey =
     provider === 'groq' && !options?.apiKey ? process.env.GROQ_API_KEY_FALLBACK : undefined
-
-  if (payload.moves.length === 0) {
-    return buildFallbackCoachAnalysis(payload)
-  }
 
   // Attempt with primary API key
   if (primaryApiKey) {

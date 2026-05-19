@@ -1,4 +1,8 @@
-import type { CoachAnalyzeRequest, CoachAnalyzeResponse, ReplayMistake } from './types'
+import type {
+  CoachAnalyzeRequest,
+  CoachAnalyzeResponse,
+  ReplayMistake,
+} from './types.js'
 
 export function buildFallbackCoachAnalysis(
   payload: CoachAnalyzeRequest,

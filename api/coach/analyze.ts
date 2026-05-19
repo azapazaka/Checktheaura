@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ZodError } from 'zod'
-import { analyzeCoachPayload } from '../../src/coach/service'
+import { analyzeCoachPayload } from '../../src/coach/service.js'
 
 export default async function handler(
   req: VercelRequest,

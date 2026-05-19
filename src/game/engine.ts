@@ -6,7 +6,7 @@ import type {
   Move,
   Piece,
   PieceColor,
-} from './types'
+} from './types.js'
 
 const BOARD_SIZE = 8
 const MAN_MOVE_DIRECTIONS: Record<PieceColor, BoardCoord[]> = {

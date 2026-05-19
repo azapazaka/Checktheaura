@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
-import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase'
+import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
 
 const requestSchema = z.object({
   matchId: z.string().uuid(),

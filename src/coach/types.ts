@@ -1,5 +1,11 @@
-import type { BoardCoord, Difficulty, GameOutcome, MatchMove, PieceColor } from '../game/types'
-import type { MatchXpReward } from '../rpg/types'
+import type {
+  BoardCoord,
+  Difficulty,
+  GameOutcome,
+  MatchMove,
+  PieceColor,
+} from '../game/types.js'
+import type { MatchXpReward } from '../rpg/types.js'
 
 export type CoachAnalyzeRequest = {
   moves: MatchMove[]

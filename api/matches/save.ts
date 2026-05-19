@@ -1,13 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
-import type { LatestResult } from '../../src/store/progress-store'
-import type { PlayerProfile } from '../../src/rpg/types'
+import type { LatestResult } from '../../src/store/progress-store.js'
+import type { PlayerProfile } from '../../src/rpg/types.js'
 import {
   buildRankScore,
   createServiceSupabaseClient,
   ensureCloudProfileExists,
   requireAuthenticatedUser,
-} from '../_lib/supabase'
+} from '../_lib/supabase.js'
 
 const requestSchema = z.object({
   latestResult: z.any(),

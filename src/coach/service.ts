@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { buildFallbackCoachAnalysis } from './fallback'
-import type { CoachAnalyzeRequest, CoachAnalyzeResponse } from './types'
+import { buildFallbackCoachAnalysis } from './fallback.js'
+import type { CoachAnalyzeRequest, CoachAnalyzeResponse } from './types.js'
 
 type CoachProvider = 'groq' | 'anthropic'
 

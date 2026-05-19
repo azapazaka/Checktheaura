@@ -1,7 +1,7 @@
-import type { GameOutcome, GameState, PieceColor } from './types'
-import { calculateMatchXp } from '../rpg/progression'
-import type { RpgClass } from '../rpg/types'
-import type { LatestResult } from '../store/progress-store'
+import type { GameOutcome, GameState, PieceColor } from './types.js'
+import { calculateMatchXp } from '../rpg/progression.js'
+import type { RpgClass } from '../rpg/types.js'
+import type { LatestResult } from '../store/progress-store.js'
 
 export function summarizeFinishedMatch({
   state,

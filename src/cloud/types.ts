@@ -1,12 +1,18 @@
-import type { GameOutcome, GameState, MatchMove, Move, PieceColor } from '../game/types'
+import type {
+  GameOutcome,
+  GameState,
+  MatchMove,
+  Move,
+  PieceColor,
+} from '../game/types.js'
 import type {
   DailyQuestState,
   MatchSummary,
   PlayerProfile,
   RpgClass,
   StoredSettings,
-} from '../rpg/types'
-import type { LatestResult } from '../store/progress-store'
+} from '../rpg/types.js'
+import type { LatestResult } from '../store/progress-store.js'
 
 export type AppSessionMode =
   | 'guest'

@@ -1,4 +1,4 @@
-import type { Difficulty } from '../game/types'
+import type { Difficulty } from '../game/types.js'
 import type {
   DailyQuestCompletion,
   DailyQuestRewards,
@@ -10,7 +10,7 @@ import type {
   ThemeId,
   Unlocks,
   XpBreakdown,
-} from './types'
+} from './types.js'
 
 const LEVEL_THRESHOLDS = [
   0, 100, 200, 300, 400, 500, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400,
@@ -331,7 +331,10 @@ export function calculateMatchXp({
     breakdown.strategistBonus = 100
   }
 
-  const total = Object.values(breakdown).reduce((sum, value) => sum + value, 0)
+  const total = Object.values(breakdown).reduce<number>(
+    (sum, value) => sum + value,
+    0,
+  )
   return { total, breakdown }
 }
 

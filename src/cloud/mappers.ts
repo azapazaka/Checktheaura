@@ -1,11 +1,11 @@
-import { createInitialProfile } from '../rpg/progression'
-import type { MatchSummary, PlayerProfile } from '../rpg/types'
+import { createInitialProfile } from '../rpg/progression.js'
+import type { MatchSummary, PlayerProfile } from '../rpg/types.js'
 import type {
   CloudMatchRecord,
   CloudProfileRecord,
   CoachAnalysisRecord,
   LeaderboardEntry,
-} from './types'
+} from './types.js'
 
 export function mapCloudProfileToPlayerProfile(
   record: CloudProfileRecord,

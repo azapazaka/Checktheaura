@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { GameOutcome, MatchMove } from '../game/types'
+import type { GameOutcome, MatchMove } from '../game/types.js'
 import {
   applyMatchRewards,
   applyQuestRewards,
@@ -13,7 +13,7 @@ import {
   getNewUnlocks,
   getUnlocksForLevel,
   resolveDailyQuestRewards,
-} from '../rpg/progression'
+} from '../rpg/progression.js'
 import type {
   DailyQuestRewards,
   MatchSummary,
@@ -22,7 +22,7 @@ import type {
   PlayerProfile,
   RpgClass,
   StoredSettings,
-} from '../rpg/types'
+} from '../rpg/types.js'
 
 export type LatestResult = MatchSummary & {
   moves: MatchMove[]

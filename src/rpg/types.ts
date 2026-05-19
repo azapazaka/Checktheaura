@@ -1,4 +1,4 @@
-import type { Difficulty } from '../game/types'
+import type { Difficulty } from '../game/types.js'
 
 export type RpgClass = 'warrior' | 'strategist' | 'shadow'
 

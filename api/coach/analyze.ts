@@ -49,15 +49,6 @@ export default async function handler(
       })
     }
 
-    if (req.headers['x-debug-coach'] === '1') {
-      return res.status(500).json({
-        error: 'Unexpected coach error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        name: error instanceof Error ? error.name : typeof error,
-        bodyType: typeof req.body,
-      })
-    }
-
     return res.status(500).json({ error: 'Unexpected coach error' })
   }
 }

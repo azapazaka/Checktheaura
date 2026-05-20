@@ -2,12 +2,25 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { createServiceSupabaseClient, requireAuthenticatedUser } from '../_lib/supabase.js'
 
+const replayMistakeSchema = z.object({
+  turnNumber: z.number(),
+  madeMove: z.object({
+    from: z.object({ row: z.number(), col: z.number() }),
+    to: z.object({ row: z.number(), col: z.number() }),
+  }),
+  betterMove: z.object({
+    from: z.object({ row: z.number(), col: z.number() }),
+    to: z.object({ row: z.number(), col: z.number() }),
+  }),
+  explanation: z.string(),
+})
+
 const requestSchema = z.object({
   matchId: z.string().uuid(),
   analysis: z.object({
     score: z.number(),
     highlights: z.array(z.string()),
-    mistakes: z.array(z.string()),
+    mistakes: z.array(replayMistakeSchema),
     tip: z.string(),
   }),
   source: z.enum(['live', 'fallback']),
@@ -43,7 +56,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw error
     }
 
-    return res.status(200).json({ analysis: data })
+    return res.status(200).json({
+      analysis: {
+        ...data,
+        highlights: payload.analysis.highlights,
+        mistakes: payload.analysis.mistakes,
+        tip: payload.analysis.tip,
+      },
+    })
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to save coach analysis'

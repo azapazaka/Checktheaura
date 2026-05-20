@@ -56,7 +56,11 @@ export async function fetchCoachAnalysis(matchId: string) {
   }
 
   const analysisData = (data as Record<string, unknown>).analysis_data as
-    | { highlights?: string[]; mistakes?: unknown[]; tip?: string }
+    | {
+        highlights?: string[]
+        mistakes?: CoachAnalyzeResponse['mistakes']
+        tip?: string
+      }
     | undefined
 
   return {

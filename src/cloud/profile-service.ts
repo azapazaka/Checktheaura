@@ -11,6 +11,7 @@ import type {
   CloudProfileRecord,
   CoachAnalysisRecord,
 } from './types'
+import type { CoachAnalyzeResponse } from '../coach/types'
 
 export async function fetchCloudProfile(userId: string) {
   const supabase = getSupabaseBrowserClient()
@@ -71,7 +72,22 @@ export async function fetchCoachHistory(userId: string) {
     throw error
   }
 
-  return (data ?? []) as CoachAnalysisRecord[]
+  return (data ?? []).map((row) => {
+    const analysisData = (row as Record<string, unknown>).analysis_data as
+      | {
+          highlights?: string[]
+          mistakes?: CoachAnalyzeResponse['mistakes']
+          tip?: string
+        }
+      | undefined
+
+    return {
+      ...row,
+      highlights: analysisData?.highlights ?? [],
+      mistakes: analysisData?.mistakes ?? [],
+      tip: analysisData?.tip ?? '',
+    } as CoachAnalysisRecord
+  })
 }
 
 export async function bootstrapCloudProfile(

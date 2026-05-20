@@ -5,6 +5,7 @@ import type {
   Move,
   PieceColor,
 } from '../game/types.js'
+import type { ReplayMistake } from '../coach/types.js'
 import type {
   DailyQuestState,
   MatchSummary,
@@ -62,7 +63,7 @@ export type CoachAnalysisRecord = {
   user_id: string
   score: number
   highlights: string[]
-  mistakes: string[]
+  mistakes: ReplayMistake[]
   tip: string
   source: 'live' | 'fallback'
   status: 'pending' | 'ready' | 'failed'

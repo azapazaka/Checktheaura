@@ -68,6 +68,7 @@ export function GamePage() {
   const [shadowHint, setShadowHint] = useState<Move | null>(null)
   const [shadowHintUsed, setShadowHintUsed] = useState(false)
   const finalizedRef = useRef(false)
+  const scheduledAiTurnRef = useRef<string | null>(null)
 
   const gameOutcome = getGameOutcome(gameState)
   const legalMoves = getLegalMoves(gameState)
@@ -78,6 +79,15 @@ export function GamePage() {
   const isShadow = profile?.classId === 'shadow'
   const canUseShadowHint =
     isShadow && !shadowHintUsed && gameState.currentTurn === 'white' && !gameOutcome
+  const aiTurnToken =
+    profile && !gameOutcome && gameState.currentTurn === 'black'
+      ? [
+          gameState.turn,
+          gameState.moves.length,
+          gameState.forcedSequence?.row ?? 'x',
+          gameState.forcedSequence?.col ?? 'x',
+        ].join(':')
+      : null
 
   useEffect(() => {
     if (!profile) {
@@ -99,16 +109,22 @@ export function GamePage() {
   })
 
   useEffect(() => {
-    if (!profile || gameOutcome || gameState.currentTurn !== 'black') {
+    if (!aiTurnToken) {
+      scheduledAiTurnRef.current = null
       return
     }
 
+    if (scheduledAiTurnRef.current === aiTurnToken) {
+      return
+    }
+
+    scheduledAiTurnRef.current = aiTurnToken
     const timeoutId = window.setTimeout(() => {
       runAiTurn()
     }, 300)
 
     return () => window.clearTimeout(timeoutId)
-  }, [effectiveDifficulty, gameOutcome, gameState.currentTurn, profile])
+  }, [aiTurnToken])
 
   useEffect(() => {
     if (!profile || !gameOutcome || finalizedRef.current) {

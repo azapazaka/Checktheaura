@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from 'react'
+import { startTransition, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { buildFallbackCoachAnalysis } from '../coach/fallback'
@@ -33,6 +33,14 @@ export function ResultsPage() {
     'idle' | 'saving-match' | 'saving-analysis' | 'saved' | 'failed'
   >('idle')
   const [cloudSaveError, setCloudSaveError] = useState<string | null>(null)
+  const analysisSaveInFlightRef = useRef<Set<string>>(new Set())
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!lastResult) {
@@ -175,8 +183,14 @@ export function ResultsPage() {
       return
     }
 
-    let cancelled = false
     const matchId = lastResult.matchId
+    const resultId = lastResult.id
+
+    if (analysisSaveInFlightRef.current.has(matchId)) {
+      return
+    }
+
+    analysisSaveInFlightRef.current.add(matchId)
 
     const saveAnalysis = async () => {
       try {
@@ -187,29 +201,44 @@ export function ResultsPage() {
           status: 'ready',
         })
 
-        if (cancelled) {
+        if (!isMountedRef.current) {
           return
         }
 
-        hydrateLastResult({
-          ...lastResult,
-          coachAnalysisId: savedAnalysis.id,
-          analysisStatus: savedAnalysis.status,
-        })
-        hydrateHistory(
-          profile.history.map((entry, index) =>
-            index === 0 && entry.id === lastResult.id
-              ? {
-                  ...entry,
-                  coachAnalysisId: savedAnalysis.id,
-                  analysisStatus: savedAnalysis.status,
-                }
-              : entry,
-          ),
-        )
-        setCloudSaveStatus('saved')
+        const store = useProgressStore.getState()
+        const currentLastResult = store.lastResult
+        const currentProfile = store.profile
+        const isSameResult = currentLastResult?.id === resultId
+
+        if (isSameResult && currentLastResult) {
+          hydrateLastResult({
+            ...currentLastResult,
+            coachAnalysisId: savedAnalysis.id,
+            analysisStatus: savedAnalysis.status,
+          })
+        }
+
+        if (currentProfile) {
+          hydrateHistory(
+            currentProfile.history.map((entry) =>
+              entry.id === resultId
+                ? {
+                    ...entry,
+                    coachAnalysisId: savedAnalysis.id,
+                    analysisStatus: savedAnalysis.status,
+                  }
+                : entry,
+            ),
+          )
+        }
+
+        if (isSameResult) {
+          setCloudSaveStatus('saved')
+        }
       } catch (error) {
-        if (!cancelled) {
+        analysisSaveInFlightRef.current.delete(matchId)
+
+        if (isMountedRef.current && useProgressStore.getState().lastResult?.id === resultId) {
           setCloudSaveError(
             error instanceof Error
               ? error.message
@@ -221,10 +250,6 @@ export function ResultsPage() {
     }
 
     void saveAnalysis()
-
-    return () => {
-      cancelled = true
-    }
   }, [
     analysis,
     analysisSource,
